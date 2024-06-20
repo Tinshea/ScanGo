@@ -1,0 +1,17 @@
+.side-panel {
+  position: fixed;
+  background-color: rgba(0, 0, 0, 0.5);
+  right: 0;
+  top: 0;
+  width: 20%; /* Prend 1/3 de la largeur de la vue */
+  height: 100vh; /* Prend toute la hauteur de la vue */
+  border-radius: 10px;
+  overflow-y: auto; /* Ajoute un défilement si le contenu est trop long */
+  transform: translateX(100%); /* Déplace le panneau hors de la vue à droite */
+  transition: transform 0.5s ease-out; /* Ajoute une transition à transform */
+}
+
+
+.side-panel.open {
+  transform: translateX(0); /* Déplace le panneau à sa position originale */
+}

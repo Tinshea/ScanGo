@@ -1,0 +1,134 @@
+.search-bar-wrapper {
+  display: flex;
+  align-items: center; /* Alignement des enfants en bas */
+  padding: 10px; /* Espace autour des éléments à l'intérieur du wrapper */
+  width: auto; /* ajuste la largeur automatiquement */
+  max-width: 100%; /* s'assurer qu'il ne dépasse pas la largeur de la fenêtre */
+}
+
+.search-bar-container {
+  position: relative; /* Pour positionner l'icône de recherche */
+  display: flex;
+  align-items: center;
+  background: rgba(187,187,187, 0.3); /* Fond semi-transparent */
+  border-radius: 20px; /* Bord arrondi */
+  padding: 5px 15px; /* Espacement interne */
+}
+.search-input-page{
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: white;
+    font-size: 48px; /* Taille de police appropriée */
+  }
+  .search-input-page::placeholder {
+    color:  white;; /* Couleur de l'indicateur de texte */
+  }
+
+
+.search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: rgb(102,102,102);
+  font-size: 16px; /* Taille de police appropriée */
+}
+.search-input::placeholder {
+  color:  rgb(102,102,102);; /* Couleur de l'indicateur de texte */
+}
+
+.search-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px; /* Espacement avant le texte du raccourci */
+  background-size: contain; /* Ajuste cela selon la taille de ton icône */
+}
+
+.shortcut {
+  background: rgba(255, 255, 255, 0.2); /* Fond du raccourci semi-transparent */
+  color: white; /* Texte blanc */
+  font-size: 12px; /* Taille de police plus petite pour le raccourci */
+  padding: 2px 6px; /* Petit espacement interne pour le raccourci */
+  margin-left: 10px; /* Sépare le raccourci de la zone de saisie */
+  border-radius: 10px; /* Bord arrondi pour le raccourci */
+}
+
+/* Supposant que tu utilises un élément <span> pour le raccourci */
+.shortcut-key {
+  text-decoration: underline; /* Souligne la touche de raccourci */
+}
+
+/* Ajout d'un effet de flou sur le fond */
+.search-bar-container::after {
+  content: '';
+  position: absolute;
+  top: -5px; left: -5px; right: -5px; bottom: -5px; /* S'étend légèrement au-delà du conteneur */
+  background: inherit; /* Hérite du fond du parent */
+  filter: blur(10px); /* Effet de flou */
+  z-index: -1; /* Place l'effet en arrière-plan */
+}
+@keyframes sound-wave {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.speaker:hover::before {
+  animation: sound-wave 2s infinite;
+}
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1); /* augmente la taille de 10% */
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Changement de couleur lors du survol */
+.speaker:hover {
+  background-color: #666; /* Couleur plus claire pour l'effet survol */
+}
+
+/* Effet de clic */
+.speaker:active {
+  transform: scale(0.95); /* Réduit légèrement la taille pour simuler le pression */
+}
+
+/* Ajoutez cette règle pour maintenir la forme ronde lors de l'animation */
+.speaker, .speaker::before {
+  overflow: hidden;
+  position: relative;
+}
+
+.speaker {
+  cursor: pointer;
+  width: 50px;
+  height: auto;
+  margin-top: 25px; /* Ajoutez une marge en haut pour descendre le logo */
+  margin-left: 20px; /* Ajoutez une marge à gauche pour décaler le logo */
+  background-color: black;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 5px;
+  transition: background-color 0.3s, transform 0.2s; /* Transition douce pour l'interaction */
+  animation: pulse 1s infinite ease-in-out; /* Applique l'animation pulse avec une durée de 1 seconde qui se répète indéfiniment */
+}
+
+.speaker::before {
+  content: '';
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-size: 100%; /* Tu peux ajuster ce pourcentage selon tes besoins */
+}

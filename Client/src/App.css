@@ -1,0 +1,50 @@
+
+
+body{
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: rgb(51, 51, 51);
+    color: rgb(255, 255, 255);
+    overflow-x: hidden;
+    padding-top: 20px; /* Ajustez cette valeur en fonction de la hauteur de votre barre de navigation */
+    height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+/* Style pour la scrollbar sur les éléments qui défilent horizontalement */
+*::-webkit-scrollbar {
+  width: 8px; /* Largeur de la scrollbar */
+  background: transparent; /* Fond transparent pour la scrollbar */
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgb(102, 102, 102); /* Couleur du thumb (la partie que vous pouvez déplacer) */
+  border-radius: 4px; /* Coins arrondis pour le thumb */
+}
+
+/* Style pour Firefox */
+* {
+  scrollbar-width: thin; /* 'auto' ou 'thin' */
+  scrollbar-color: rgb(102, 102, 102) transparent; /* couleur du thumb et couleur du track */
+}
+
+/* Si vous souhaitez également réinitialiser le style au passage de la souris */
+*::-webkit-scrollbar-thumb:hover {
+  background: #555; /* Couleur plus foncée au survol */
+}
+
+/* Cacher le fond de la scrollbar */
+*::-webkit-scrollbar-track {
+  background: transparent; /* Fond transparent pour le track */
+}
+
+/* Pour cacher les boutons de la scrollbar dans Webkit */
+*::-webkit-scrollbar-button {
+  display: none;
+}
+

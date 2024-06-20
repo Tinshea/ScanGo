@@ -1,0 +1,22 @@
+.comment {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+}
+  
+.comment strong {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.date {
+    font-size: 0.8em;
+    color: #666;
+    font-style: italic;
+}
+  
+.comment p {
+    margin-top: 5px;
+}
+  

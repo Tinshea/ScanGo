@@ -1,0 +1,105 @@
+.edit-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.6); /* Fond semi-transparent pour le texte */
+  color: white; /* gris foncé pour le texte */
+  padding: 2em;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 50%;
+  margin: auto;
+  margin-top: 2em;
+}
+
+.edit-profile h2 {
+  margin-bottom: 2em;
+}
+
+.edit-profile form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.edit-profile label {
+  margin-bottom: 0.5em;
+  font-weight: bold;
+}
+
+.edit-profile input[type="text"],
+.edit-profile input[type="password"],
+.edit-profile input[type="file"] {
+  padding: 0.8em;
+  margin-bottom: 1em;
+  border: 1px solid #ced4da; /* gris clair pour les bordures d'input */
+  border-radius: 5px;
+  background-color: #fff; /* blanc pour le fond des inputs */
+  cursor: pointer;
+}
+
+.edit-profile input[type="file"] {
+  background-color: rgba(0, 0, 0, 0.1); /* gris très clair pour le fond des inputs de fichier */
+  cursor: pointer;
+}
+.edit-profile img {
+  width: 248px;
+  height: auto;
+  border-radius: 5px;
+  margin-bottom: 1em;
+}
+.image-conteneur{
+  display: flex;
+  flex-direction: column;
+}
+.edit-profile input:focus {
+  border-color: white; /* bleu clair pour l'input actif */
+  outline: none;
+}
+
+.edit-profile .error {
+  color: #dc3545; /* rouge pour les messages d'erreur */
+  margin-bottom: 1em;
+}
+
+.edit-profile label {
+  margin-bottom: 0.5em;
+  font-weight: bold;
+  cursor: pointer;
+  display: block; /* Ajustez en block pour aligner correctement avec l'input de type file */
+}
+
+.edit-profile button {
+  padding: 0.8em;
+  background-color: #28a745; /* vert pour le bouton */
+  color: #fff; /* blanc pour le texte du bouton */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.edit-profile button:hover {
+  background-color: #218838; /* un vert un peu plus foncé pour le survol */
+}
+
+.edit-profile button:disabled {
+  background-color: #6c757d; /* gris moyen pour le bouton désactivé */
+  cursor: not-allowed;
+}
+
+/* Styles spécifiques pour les images de prévisualisation */
+.edit-profile img {
+  max-width: 100%; /* Assure que l'image ne dépasse pas les limites de son conteneur */
+  height: auto; /* Maintient le rapport hauteur/largeur de l'image */
+  border-radius: 5px; /* Arrondit les coins de l'image */
+  margin-bottom: 1em; /* Espace entre l'image de prévisualisation et les autres éléments de formulaire */
+}
+
+/* Responsive design pour les petits écrans */
+@media (max-width: 768px) {
+  .edit-profile {
+    width: 90%; /* Ajustement pour les petits écrans */
+    padding: 1em;
+  }
+}

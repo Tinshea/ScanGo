@@ -1,0 +1,68 @@
+.profile-container {
+  display: flex; /* Affichage en ligne des éléments enfants */
+  flex-direction: column; /* Alignement vertical des éléments enfants */
+  align-items: center;
+  padding: 20px;
+  margin: 10px;
+  width: 100%;
+}
+
+.profile-picture-preview {
+  width: 50%;
+  height: auto;
+  border-radius: 50%; /* Rendre l'image ronde */
+  object-fit: cover; /* S'assurer que l'image couvre bien la taille définie */
+  animation: pulse 3.5s infinite ease-in-out; /* Applique l'animation pulse avec une durée de 1 seconde qui se répète indéfiniment */
+}
+
+.profile-container-name {
+  display: flex; /* Affichage en ligne des éléments enfants */
+  flex-direction: column; /* Alignement vertical des éléments enfants */
+  align-items: center;
+  margin: 10px;
+  cursor: pointer;
+  background-color: transparent;
+  border: none;
+}
+.profile-container-name:hover {
+  background-color: rgba(255, 255, 255, 0.3); /* Définition de la couleur de fond comme transparente */
+  color: black;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); /* Ajout d'une ombre discrète */
+  border-radius: 5px; /* Rendre l'image ronde */
+}
+.username-preview {
+  font-size: 1.2em; /* Taille du texte pour le nom d'utilisateur */
+  width: auto;
+  align-items: center;
+  color: black; 
+  margin: 20px;
+  padding: 4px;
+  background-color: aliceblue;
+  border-radius: 5px;
+}
+
+.profile-button {
+  width: 50%;
+  padding: 10px;
+  border-radius: 5px;
+  border: none;  cursor: pointer;
+  background-color: transparent; /* Définition de la couleur de fond comme transparente */
+  border-bottom: 2px solid white; /* Maintien de la bordure inférieure */
+  color: white; /* Définition de la couleur du texte */
+  box-shadow: 0 2px 4px rgba(255, 255, 255, 0.4); /* Ajout d'une ombre discrète */
+  margin: 10px;
+}
+
+.profile-button:hover {
+  background-color: white; /* Définition de la couleur de fond comme transparente */
+  color: black;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); /* Ajout d'une ombre discrète */
+  border-bottom: 2px solid white; /* Maintien de la bordure inférieure */
+}
+
+/* Styles pour la responsive */
+@media (max-width: 600px) {
+  .profile-container {
+      max-width: 100%; /* Largeur complète sur les petits écrans */
+  }
+}

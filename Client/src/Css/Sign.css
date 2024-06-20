@@ -1,0 +1,57 @@
+.sign-container {
+  padding: 20px;
+  margin: 10px;
+}
+
+.sign-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sign-form input {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 10px;
+  box-shadow: 0 2px 4px rgba(255, 255, 255, 0.4); /* Ajout d'une ombre discrète */
+  transition: background-color 0.3s ease; /* Effet de transition doux pour le changement de couleur de fond */
+  background-color: transparent; /* Définition de la couleur de fond comme transparente */
+  border: none; /* Suppression de toutes les bordures */
+  border-bottom: 2px solid white; /* Maintien de la bordure inférieure */
+  color: white; /* Définition de la couleur du texte */
+  border-radius: 5px;
+}
+
+.sign-form input::placeholder {
+  color: white; /* Remplacez blue par la couleur que vous souhaitez */
+}
+.remember-forgot {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.remember-forgot input[type="checkbox"] {
+  margin-left: 10px;
+  width: auto;
+}
+
+.sign-form button {
+  width: 50%;
+  padding: 10px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  background-color: transparent; /* Définition de la couleur de fond comme transparente */
+  border-bottom: 2px solid white; /* Maintien de la bordure inférieure */
+  color: white; /* Définition de la couleur du texte */
+  box-shadow: 0 2px 4px rgba(255, 255, 255, 0.4); /* Ajout d'une ombre discrète */
+}
+
+.sign-form button:hover {
+  background-color: white; /* Définition de la couleur de fond comme transparente */
+  color: black;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); /* Ajout d'une ombre discrète */
+  border-bottom: 2px solid white; /* Maintien de la bordure inférieure */
+}

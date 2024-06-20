@@ -1,0 +1,155 @@
+.manga-card {
+  position: relative;
+  cursor: pointer;
+  height: 100%;
+  width: auto;
+  max-width: 300px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: inline-block; /* Makes the card size to content */
+}
+  
+.manga-cover {
+  display: block;
+  width: 100%; /* prend toute la largeur du conteneur */
+  height: 100%; /* prend toute la hauteur du conteneur */
+  object-fit: cover; /* s'assure que l'image couvre la zone du conteneur */
+  border-radius: 10px; /* Si vous voulez des coins arrondis sur l'image elle-même */
+}
+  
+  .manga-flag {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    z-index: 10;
+  }
+  
+  .manga-info {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7); /* semi-transparent background */
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;    
+  }
+  
+  .manga-description-overlay {
+    padding: 20px;
+    text-align: center;
+    color: white;
+  }
+  
+  .manga-card:hover .manga-cover {
+    opacity: 0.3;
+  }
+  
+  .manga-card:hover .manga-info {
+    opacity: 1;
+  }
+  
+  .manga-description-content {
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .manga-card:hover .manga-description-content {
+    transform: translateY(0);
+  }
+  
+  .manga-title {
+    font-size: 1.2em;
+    margin-bottom: 0.5em;
+  }
+  
+  .manga-description {
+    font-size: 1em;
+    margin-bottom: 0.5em;
+    max-height: 200px; /* Limite la hauteur de la description */
+    overflow-y: auto; /* Ajoute un défilement si le contenu est trop long */
+
+  }
+  
+  .manga-genre,
+  .manga-status {
+    font-size: 0.85em;
+    color: #888;
+  }
+
+  .Mangalist-conteneur{
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 20px;
+  }
+
+  .Mangalist-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .Sectiontitle {
+    font-size: 1.5em;
+    width: fit-content;
+    color: #fff;
+    padding-bottom: 2px; /* Ajoutez un espace pour la bordure */
+    border-bottom: 2px solid; /* Remplacez 'text-decoration' par une bordure inférieure */
+    border-image: linear-gradient(to right, transparent, #fff, transparent) 1;
+  }
+
+  .Sectionmore{
+    font-size: 1em;
+    background-color: transparent;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+  }
+  .Mangalist {
+    display: flex; /* utilisez flex au lieu de grid */
+    height: 400px;
+    flex-wrap: nowrap; /* empêche les éléments de passer à la ligne */
+    overflow-x: auto; /* permet le défilement horizontal si le contenu dépasse la largeur de l'écran */
+    gap: 20px;
+    list-style-type: none;
+    padding: 0;
+    align-items: flex-start;
+  }
+
+  .Mangalist-with-chapter{
+    display: grid; /* utilisez flex au lieu de grid */
+    justify-content: left;
+    height: 400px;
+    width: fit-content;
+    list-style-type: none;
+    padding: 0;
+    overflow-y: auto;
+    
+  }
+  
+  .Mangalist li {
+    min-width: 200px; /* Largeur minimale pour les items de manga */
+    flex: 0 0 auto; /* Les enfants ne s'étirent pas et ne rétrécissent pas */
+  }
+  
+  
+  @media (max-width: 768px) {
+    .manga-card {
+      width: calc(50% - 2rem); /* Adjust card width for smaller screens */
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .manga-card {
+      width: 100%; /* Full width on very small screens */
+    }
+  }
+  
+  /* Style for scrollbar here */
+  

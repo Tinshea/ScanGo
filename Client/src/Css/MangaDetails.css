@@ -1,0 +1,237 @@
+/* MangaDetails Component */
+
+.manga-details-container {
+  margin: 0 auto; /* Center the container */
+  padding: 20px;
+  flex-wrap: wrap; /* Wrap children for responsive layout */
+}
+.manga-container{
+  display: flex;
+  height: 100vh;
+  padding-bottom: 20px;
+}
+
+.manga-details-container-for-profil{
+  display: flex;
+  margin: 0 auto; /* Center the container */
+  height: 200px;
+  width: 100%;
+  padding: 20px;
+  flex-wrap: wrap; /* Wrap children for responsive layout */
+}
+.manga-info-banner img {
+  position:relative;
+  z-index: -1;
+  width: 100%;
+  height: 40vh;
+  object-fit: cover;
+  object-position: center 25%;
+}
+/* https://stackoverflow.com/questions/23935758/gradient-over-img-tag-using-css */
+.manga-info-banner {
+  width: 100%;
+  background: linear-gradient(to bottom, rgba(51, 51, 51, 0) 0%, rgb(51, 51, 51) 100%);
+}
+
+.manga-info-container {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background-color: #292929;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  height: 100%;
+  width: 20vw; /* ou une largeur fixe si 30vw est trop grand */
+  overflow: hidden; /* ajouter pour gérer le débordement */
+}
+
+.manga-chapters-container {
+  flex: 2; /* Adjust the flex value as needed */
+  overflow-y: auto; /* Scroll for chapters list */
+  height: 100%;
+  margin-left: 20px;
+  margin-bottom: 20px;
+  background-color: #292929;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Manga Header and Info Styles */
+.manga-header {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  flex-shrink: 0; /* empêcher le rétrécissement */
+  width: 100%; /* s'assurer que cela ne dépasse pas le conteneur */
+}
+
+.manga-cover-details {
+  width: 145px; /* Adjust the width as necessary */
+  height: auto;
+  border-radius: 4px;
+  margin-right: 20px;
+}
+
+.manga-title {
+  font-size:  1em;
+  margin-bottom: 10px;
+  color: #fff; /* Title color */
+  word-wrap: break-word; /* Ensures text wraps to the next line */
+  width: 100%; /* This can be adjusted as needed */
+  flex-grow: 1;
+}
+
+
+.manga-description-detail {
+  height: 100%;
+  margin-bottom: 20px;
+  overflow-x: hidden;
+  line-height: 1.5;
+  width: 100%;
+}
+
+
+.manga-status-detail{
+  font-size: 0.85em;
+  color: white;
+}
+/* Styles for Genres and Actions */
+.manga-genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px; /* Space between genre tags */
+  margin-bottom: 5px;
+}
+
+.manga-genre-detail {
+  color: white; /* Text color for genre tags */
+  border: none;
+  padding: 5px 15px;
+  font-size: 0.85em; /* Smaller font size for genre tags */
+  cursor: pointer;
+  border-radius: 5px;
+  background-color: transparent; /* Définition de la couleur de fond comme transparente */
+  border-bottom: 2px solid white; /* Maintien de la bordure inférieure */
+  box-shadow: 0 2px 4px rgba(255, 255, 255, 0.4); /* Ajout d'une ombre discrète */
+}
+
+.manga-genre-detail:hover {
+  background-color: white; /* Définition de la couleur de fond comme transparente */
+  color: black;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); /* Ajout d'une ombre discrète */
+  border-bottom: 2px solid white; /* Maintien de la bordure inférieure */
+}
+
+.manga-actions {
+  display: flex;
+  flex-direction: column;
+}
+
+.first-line-buttons {
+  display: flex;
+  justify-content: space-between; /* Cela va séparer les boutons sur la ligne */
+}
+
+.btn-read-first, .btn-subscribe, .btn-spotify {
+  flex: 1; /* Les boutons vont prendre tout l'espace disponible */
+  margin: 5px; /* Ajoutez une marge pour l'espacement entre les boutons */
+  cursor: pointer;
+  color: white;
+  border: none;
+  border-radius: 10px; /* Rounded corners for buttons */
+  padding: 10px 5px;
+  font-size: 0.85em;
+  width: auto;
+}
+
+.btn-read-first, .btn-subscribe {
+  background-color: #E8274A;
+}
+.btn-spotify {
+  background-color: #18D860;
+}
+/* Si les boutons sont trop collés, ajustez la marge ci-dessus et ci-dessous */
+.first-line-buttons > button:not(:last-child) {
+  margin-right: 10px; /* Espace entre les deux premiers boutons */
+}
+
+.chapter-list {
+  display: flex;
+  flex-direction: column; /* Change to column to stack items vertically */
+  padding: 15px;
+  overflow-x: hidden;
+}
+
+.chapter {
+  flex-basis: calc(50% - 20px); /* Adjust to 2 columns layout */
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  background-color: #262626;
+  border-radius: 4px; /* Rounded corners for chapters */
+  margin-bottom: 20px; /* Ajoutez de l'espace en bas de chaque chapitre */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  position: relative; /* Pour le positionnement des éléments enfants comme la date */
+}
+
+.chapter:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2); /* Shadow on hover */
+}
+
+.chapter-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1; /* Permet aux titres de chapitre d'occuper l'espace disponible */
+}
+
+.chapter-time {
+  position: absolute;
+  right: 20px; /* Ajustez selon le padding de .chapter */
+  top: 20px; /* Ajustez selon le padding de .chapter */
+  font-size: 0.8em;
+  font-style: italic;
+  color: gray;
+}
+.manga-page {
+  max-width: 100%; /* Cela assure que la page ne dépasse pas la largeur du conteneur */
+  height: auto; /* Cela garde le ratio de l'image intact */
+  margin-bottom: 20px; /* Ajoutez de l'espace entre les pages */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Optionnel: ajoutez une ombre pour du style */
+  border-radius: 4px; /* Optionnel: arrondit les coins de l'image */
+}
+.chapter-reader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 800px; /* Ou la largeur que vous souhaitez */
+  margin: auto; /* Cela va centrer le conteneur */
+  padding: 20px;
+}
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .manga-details-container {
+    flex-direction: column;
+  }
+
+  .manga-info-container {
+    order: 1; /* Put chapters first on small screens */
+    margin-right: 0;
+    margin-top: 20px; /* Space after chapters */
+    height: 100vh; /* Hauteur maximale plus petite pour les écrans plus petits */
+  }
+
+  .manga-chapters-container {
+    order: 2; /* Put chapters first on small screens */
+    margin-bottom: 20px; /* Space before info */
+  }
+
+  .chapter {
+    flex-basis: 100%; /* Full width chapters on small screens */
+  }
+  .manga-title {
+    font-size: 1em; /* Smaller font size for small screens */
+  }
+}

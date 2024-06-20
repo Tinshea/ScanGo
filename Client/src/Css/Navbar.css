@@ -1,0 +1,56 @@
+.navbar {
+  display: flex;
+  justify-content: space-between; /* Align items with space between */
+  align-items: center;
+  position: fixed;
+  top: 0;
+  height: 40px;
+  width: 100%;
+  background-color: rgb(102, 102, 102); /* Changez à la couleur de fond de votre choix */
+  padding: 10px 20px;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.navbar-logo {
+  height: 90px; /* Changez à la taille de votre choix */
+  cursor: pointer;
+  margin-top: 20px; /* Ajoutez une marge en haut pour descendre le logo */
+}
+
+/* Ajouter de l'espace sur les côtés des items */
+.navbar-item {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+/* Responsive design pour les écrans plus petits */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 5px 10px; /* Réduire le padding sur les petits écrans */
+  }
+
+  .navbar-logo {
+    height: 80px; /* Taille plus petite pour le logo sur les petits écrans */
+  }
+  
+  /* Ajouter d'autres ajustements pour les éléments de la navbar si nécessaire */
+}
+
+/* Effet de survol pour le logo */
+.navbar-logo:hover {
+  opacity: 0.8; /* Légère transparence au survol */
+}
+
+/* Responsive design pour les écrans plus petits */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 5px 10px; /* Réduire le padding sur les petits écrans */
+  }
+
+  .navbar-logo {
+    height: 80px; /* Taille plus petite pour le logo sur les petits écrans */
+  }
+  
+  /* Ajouter d'autres ajustements pour les éléments de la navbar si nécessaire */
+}

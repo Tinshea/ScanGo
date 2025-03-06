@@ -1,0 +1,49 @@
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.pagination .prev,
+.pagination .next,
+.pagination .page-number {
+  cursor: pointer;
+  padding: 5px 10px;
+  margin: 0 5px;
+  border: 1px solid #ccc;
+  background-color: #f8f8f8;
+  transition: background-color 0.3s;
+}
+
+.pagination .page-number:hover,
+.pagination .prev:hover,
+.pagination .next:hover {
+  background-color: #ddd;
+}
+
+.pagination .active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.pagination button:disabled {
+  cursor: not-allowed;
+  color: #ccc;
+}
+
+/* Style pour les ellipses ou d'autres éléments personnalisés */
+.pagination .ellipsis {
+  border: none;
+  background-color: transparent;
+  cursor: default;
+}
+
+.pagination .page-number:disabled {
+  cursor: default;
+  color: #999;
+  border-color: #eee;
+  background: #fff;
+}
+

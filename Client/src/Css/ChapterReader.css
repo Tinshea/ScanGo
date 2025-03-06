@@ -1,0 +1,138 @@
+/* Styles existants ... */
+
+.chapter-reader {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start; /* modifié pour aligner le contenu en haut */
+  justify-content: center;
+  width: 100%;
+  overflow: hidden; /* Ajouté pour empêcher le débordement au niveau du parent */
+}
+
+/* Nouveaux styles pour les contrôles de zoom et de direction */
+.controls {
+  position: absolute; /* Nouveau - positionne les contrôles absolument par rapport à leur parent */
+  right: 10px; /* Nouveau - déplace les contrôles vers la droite du conteneur */
+  z-index: 0px; /* Nouveau - s'assure que les contrôles sont au-dessus des images */
+}
+
+.controls button {
+  background-color: #333;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  margin: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.pages-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-height: 100vh; /* Ajoute une hauteur maximale pour le conteneur de pages */
+  overflow: auto; /* Permet le défilement si le contenu dépasse */
+}
+
+.pages-container.rtl {
+  direction: rtl;
+}
+
+.manga-page {
+  max-width: 100%; /* Contraint la largeur de l'image au conteneur */
+  max-height: 100%; /* Nouveau - Contraint la hauteur de l'image */
+  height: auto; /* Assure que le ratio de l'image est maintenu */
+  margin-bottom: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  transition: transform 0.3s ease;
+  object-fit: contain; /* Nouveau - Assure que le contenu est réduit pour s'adapter */
+}
+
+.sidebar {
+  position: absolute; /* Nouveau - positionne les contrôles absolument par rapport à leur parent */
+  background-color: #1e1e1e; /* Couleur d'arrière-plan de votre panneau */
+  color: #ffffff; /* Couleur du texte */
+  width: 240px; /* Largeur du panneau latéral */
+  height: 100vh; /* Hauteur totale */
+  padding: 20px; /* Espace intérieur */
+  box-sizing: border-box; /* Inclure padding dans la largeur et la hauteur */
+  left: 0px; /* Nouveau - déplace les contrôles vers la droite du conteneur */
+  z-index: 10; /* Nouveau - s'assure que les contrôles sont au-dessus des images */
+}
+
+.sidebar-header {
+  margin-bottom: 20px; /* Espace sous l'en-tête */
+}
+
+.provider-select {
+  width: 100%; /* Utilisez la largeur totale */
+  padding: 10px; /* Espace intérieur pour le sélecteur */
+  margin-bottom: 20px; /* Espace sous le sélecteur */
+}
+
+.chapters-nav {
+  margin-bottom: 20px; /* Espace sous la navigation */
+  padding: 10px; /* Espace intérieur */
+}
+
+.chapters-list {
+  list-style-type: none; /* Pas de puces */
+  padding: 0; /* Pas d'espace intérieur */
+  margin: 0; /* Pas de marge */
+  overflow-x: auto;
+  height: 50vh;
+  border-radius: 10px;
+  background-color: rgb(102, 102, 102); /* Changez à la couleur de fond de votre choix */
+}
+
+.chapter-item {
+  padding: 10px; /* Espace intérieur pour chaque élément */
+  border-bottom: 1px solid #333; /* Ligne de séparation */
+}
+
+.chapter-link {
+  color: #ffffff; /* Couleur des liens */
+  text-decoration: none; /* Pas de soulignement */
+  display: block; /* Les liens remplissent l'espace des éléments de liste */
+}
+
+.chapter-link:hover {
+  background-color: #333; /* Couleur de fond au survol */
+}
+
+
+.manga-page.rtl {
+  /* Pour une meilleure expérience en mode RTL, vous pouvez inverser les pages ici */
+}
+
+.comments {
+  position: absolute; /* Nouveau - positionne les contrôles absolument par rapport à leur parent */
+  width: 500px; /* Largeur du panneau latéral */
+  margin-top: 50px; /* Espace au-dessus du panneau */
+  margin-left: 1400px;
+}
+
+.write-comment {
+  margin-top: 10px; /* Espace au-dessus du formulaire de commentaire */
+  margin-bottom: 5px; /* Espace sous le formulaire de commentaire */
+  border: 1px solid #333; /* Bordure autour de la zone de texte */
+  background-color: #5b5b5b; /* Couleur de fond de la zone de texte */
+  width: 100%; /* Largeur de la zone de texte */
+  height: 10em; /* Hauteur de la zone de texte */
+  resize: none; /* Permettre le redimensionnement vertical */
+  overflow: hidden; /* Masquer le débordement */
+}
+
+.comment-button {
+  background-color: #333; /* Couleur de fond du bouton */
+  color: white; /* Couleur du texte du bouton */
+  cursor: pointer; /* Curseur de la souris */
+}
+
+/* Styles responsifs */
+@media (max-width: 768px) {
+  /* ... vos styles responsifs existants ... */
+}
+
+/* Autres styles ... */

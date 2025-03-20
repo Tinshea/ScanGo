@@ -42,6 +42,8 @@ func main() {
 	http.HandleFunc("/api/user/chapter/", CorsMiddleware(Controllers.UpdateUserChapter))
 	http.HandleFunc("/api/user/follow/", CorsMiddleware(Controllers.UpdateUserFollow))
 	http.HandleFunc("/api/user/chapter/comment", CorsMiddleware(Controllers.HandleComment))
+	http.HandleFunc("/api/chatbot", CorsMiddleware(Controllers.ChatbotHandler))
+
 	fmt.Println("Server is listening on port 8080...")
 	err := http.ListenAndServe(":8080", nil)
 

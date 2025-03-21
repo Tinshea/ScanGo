@@ -1,5 +1,5 @@
 const env = {
-  API_URL: "http://localhost:8080",
+  API_URL: "https://scango-jlfs.onrender.com",
 };
 
 export default env;

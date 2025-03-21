@@ -13,9 +13,10 @@ const ShowTag = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const apiUrl = "http://localhost:8080"; // Utilise ceci si ton backend tourne en Docker
         const resp = await axios({
           method: 'GET',
-          url: `/api/Home`,
+          url: `${apiUrl}/api/Home`,
           params: {
               tag : query,
               offset: offset,

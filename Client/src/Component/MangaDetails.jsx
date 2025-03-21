@@ -6,6 +6,7 @@ import ChapterList from "./ChapterList"; // Gère l'affichage des chapitres
 import LoadingComponent from "./LoadingComponent";
 import PopupComponent from "./PopupComponent";
 import "../Css/MangaDetails.css";
+import env from "../env";
 
 const MangaDetails = () => {
   const { id } = useParams();
@@ -19,7 +20,7 @@ const MangaDetails = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get(`/api/Manga?id=${id}`);
+        const res = await axios.get(`${env.API_URL}/api/Manga?id=${id}`);
         setManga(res.data.MangaDetailList);
         if (isAuthenticated && user.followedMangas.includes(id)) {
           setIsFollowing(true);
@@ -38,7 +39,7 @@ const MangaDetails = () => {
 
   const handleFollowClick = () => {
     if (isAuthenticated) {
-      axios.post(`/api/user/follow/`, { userId: user.id, mangaId: id });
+      axios.post(`${env.API_URL}/api/user/follow/`, { userId: user.id, mangaId: id });
       setPopupMessage("You are now following!");
       setIsFollowing(true);
     } else {
@@ -49,7 +50,7 @@ const MangaDetails = () => {
 
   const handleUnfollowClick = () => {
     if (isAuthenticated) {
-      axios.post(`/api/user/unfollow/`, { userId: user.id, mangaId: id });
+      axios.post(`${env.API_URL}/api/user/unfollow/`, { userId: user.id, mangaId: id });
       setPopupMessage("You are no longer following!");
       setIsFollowing(false);
     } else {

@@ -5,6 +5,7 @@ import { useParams, useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "./SideBar";
 import { AuthContext } from "./AuthProvider";
 import Comment from "./Comment";
+import env from "../env";
 
 const ChapterReader = () => {
   const [pages, setPages] = useState([]);
@@ -35,7 +36,7 @@ const ChapterReader = () => {
         setPages(pageUrls);
 
         if (isAuthenticated) {
-          await axios.post(`/api/user/chapter/`, {
+          await axios.post(`${env.API_URL}/api/user/chapter/`, {
             userId: user.id,
             mangaId: mangaDetails.id,
             chapterId: chapterId,
@@ -78,7 +79,7 @@ const ChapterReader = () => {
     }
 
     try {
-      const response = await axios.post(`/api/user/chapter/comment`, {
+      const response = await axios.post(`${env.API_URL}/api/user/chapter/comment`, {
         userId: user.id,
         chapterId: chapterId,
         manga: mangaDetails.title,

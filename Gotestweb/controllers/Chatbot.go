@@ -35,9 +35,9 @@ func CallAIMLAPIChatbot(message string) (string, error) {
 	apiURL := "https://api.aimlapi.com/v1/chat/completions"
 
 	// Votre clé API AIMLAPI
-	apiKey := "71a4fa08719841da9545dea864652b2e" // Remplacez par votre clé API
+	apiKey := "71a4fa08719841da9545dea864652b2e" 
 
-	// Créer la requête
+	// Créer la requêtea
 	requestBody := ChatCompletionRequest{
 		Model: "gpt-4o", // Modèle à utiliser
 		Messages: []ChatCompletionMessage{
@@ -89,6 +89,21 @@ func CallAIMLAPIChatbot(message string) (string, error) {
 	reply := response.Choices[0].Message.Content
 
 	return reply, nil
+}
+func EnableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// Autoriser les requêtes OPTIONS directement
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 // Endpoint pour le chatbot

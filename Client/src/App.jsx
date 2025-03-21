@@ -8,6 +8,7 @@ import Navbar from './Component/Navbar'; // Import the Navbar component
 import EditProfile from './Component/EditProfile';
 import ShowSearch from './Component/ShowSearch';
 import ShowTag from './Component/ShowTag';
+import Chatbot from './Component/Chatbot';
 
 function App() {
 
@@ -28,6 +29,7 @@ function App() {
           <Route path="/search/:query" element={<ShowSearch />} />
           <Route path="/tag/:query" element={<ShowTag />} />
         </Routes>
+        <Chatbot />
       </div>
     </Router>
   );

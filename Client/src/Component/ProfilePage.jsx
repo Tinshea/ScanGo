@@ -5,6 +5,7 @@ import LoadingComponent from "./LoadingComponent";
 import DisplayList from "./DisplayList";
 import DisplayMangaSeen from "./DisplayMangaSeen";
 import CommentUser from "./CommentUser";
+import env from "../env";
 
 const ProfilePage = () => {
   const { id } = useParams();
@@ -18,13 +19,13 @@ const ProfilePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get(`/api/User?id=${id}`);
+        const res = await axios.get(`${env.API_URL}/api/User?id=${id}`);
         setProfile(res.data);
 
-        const commentsRes = await axios.get(`/api/user/info/comment?userId=${id}`);
+        const commentsRes = await axios.get(`${env.API_URL}/api/user/info/comment?userId=${id}`);
         setUserComments(commentsRes.data || []);
 
-        const resFollow = await axios.get(`/api/user/info/?id=${id}`);
+        const resFollow = await axios.get(`${env.API_URL}/api/user/info/?id=${id}`);
         setFollowManga(resFollow.data.followedMangas);
         setMangaSeen(resFollow.data.chaptersSeen);
       } catch (error) {

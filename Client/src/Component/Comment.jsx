@@ -31,7 +31,7 @@ const Comment = ({ comments, setComments }) => {
   const handleDelete = async (commentId) => {
     setIsLoading(true);
     try {
-      await axios.delete(`/api/user/chapter/comment?id=${commentId}`);
+      await axios.delete(`${env.API_URL}/api/user/chapter/comment?id=${commentId}`);
       // Mise à jour de l'affichage sans recharger la page
       setComments((prevComments) => prevComments.filter((comment) => comment.id !== commentId));
     } catch (error) {

@@ -1,0 +1,30 @@
+services:
+  backend:
+    build: ./Gotestweb
+    ports:
+      - "8080:8080"
+    dns:
+      - 8.8.8.8
+    environment:
+      - MONGO_URI=mongodb+srv://malekbouzarkouna58:7X0NwjfFsh5reaJg@expressapi.umkdqwz.mongodb.net/scango?retryWrites=true&w=majority&appName=ExpressApi
+      - AIMLAPI_KEY=71a4fa08719841da9545dea864652b2e
+    depends_on:
+      - mongo
+
+  frontend:
+    build: ./Client
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:

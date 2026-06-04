@@ -1,76 +1,80 @@
-# ScanGo - Manga Reader Application 📖
+# ScanGo — Manga Reader Application
 
-ScanGo is a modern, full-stack web application designed for manga enthusiasts. Inspired by platforms like MangaDex, it provides a seamless experience for discovering, reading, and discussing your favorite manga. The project integrates real-time data from the MangaDex API and includes an AI-powered chatbot to assist users.
+> Personal full-stack project by Malek Bouzarkouna
 
-## ✨ Core Features
+A full-stack manga reader web application inspired by MangaDex, built with React, Golang, and MongoDB. It aggregates real-time manga data from the MangaDex API, supports a complete user account system with social features, and integrates an AI-powered chatbot for navigation and recommendations.
 
-* **Discover & Read**:
-    * Browse **trending mangas** directly on the homepage, powered by the MangaDex API.
-    * Use the **advanced search** to find manga by title or genre. 
-    * An intuitive and clean reader for an immersive chapter reading experience.
+🌐 **Live demo:** [scan-go-five.vercel.app](https://scan-go-five.vercel.app)
 
-* **User Interaction**:
-    * **Full user account system** with secure registration and login (passwords hashed with `bcrypt`). 
-    * Engage with the community by **posting comments** on each chapter.
-    * Keep track of your reading history and favorite series.
+## 🛠️ Tech Stack
 
-* **Profile Customization**:
-    * Personalize your profile with a custom **username, banner, and profile picture**.
-    * Manage your account settings, including your password.
+- **Frontend**: React, React Router, CSS
+- **Backend**: Golang (REST API, high-performance concurrent server)
+- **Database**: MongoDB (user data, comments, preferences)
+- **Tools & Services**: Docker, Docker Compose, Cloudinary (image hosting), MangaDex API, AI chatbot integration
 
-* **🤖 AI Chatbot Assistant**:
-    * An integrated chatbot to help users navigate the site, find manga, or get recommendations. 
-
----
-
-## 🛠️ Technology Stack
-
-The project is built with a modern and robust technology stack:
-
-* **Frontend**:
-    * **React**: For building a dynamic and responsive user interface.
-    * **React Router**: To handle client-side navigation between pages.
-
-* **Backend**:
-    * **Golang**: For a high-performance, concurrent server.
-    * **REST API**: A resource-based API for handling all client-server communication.
-
-* **Database**:
-    * **MongoDB**: A NoSQL database to store user data, comments, and preferences.
-
-* **External APIs & Services**:
-    * **MangaDex API**: To fetch comprehensive data about manga, chapters, covers, etc.
-    * **Cloudinary**: For cloud-based management and delivery of user-uploaded images (profile pictures, banners).
-
----
-
-## 🚀 Getting Started
-
-To get a local copy up and running, follow these simple steps.
+## 📦 Installation & Setup
 
 ### Prerequisites
 
-* Node.js & npm
-* Go
-* MongoDB
+- Node.js & npm
+- Go 1.20+
+- MongoDB (local or Atlas)
+- A Cloudinary account (for image uploads)
 
-### Installation
+### Instructions
 
-1.  **Clone the repo**
-    ```sh
-    git clone [https://github.com/Tinshea/ScanGo.git](https://github.com/Tinshea/ScanGo.git)
-    cd ScanGo
-    ```
+```bash
+# 1. Clone the repository
+git clone https://github.com/Tinshea/ScanGo.git
+cd ScanGo
 
-2.  **Frontend Setup**
-    ```sh
-    cd client 
-    npm install
-    npm start
-    ```
+# 2. Start with Docker Compose (recommended)
+docker-compose up --build
 
-3.  **Backend Setup**
-    ```sh
-    cd server
-    go run main.go
-    ```
+# OR manually:
+
+# 3a. Frontend
+cd Client
+npm install
+npm start
+
+# 3b. Backend (separate terminal)
+cd Gotestweb
+go run main.go
+```
+
+## ✨ Features
+
+### Manga Discovery & Reading
+Users can browse trending manga on the homepage powered by the MangaDex API, search by title or genre, and read chapters in an immersive inline reader.
+
+### User Account System
+Full registration and login flow with passwords hashed via `bcrypt`. Users maintain a reading history and a favorites list.
+
+### Social Features
+Readers can post comments on individual chapters and interact with the community around each series.
+
+### Profile Customization
+Each user can personalize their profile with a custom username, banner image, and profile picture — all stored and delivered via Cloudinary.
+
+### 🤖 AI Chatbot
+An integrated assistant helps users navigate the platform, discover new series, and get personalized recommendations.
+
+## 🗂️ Project Structure
+
+```
+ScanGo/
+├── Client/             # React frontend (pages, components, routing)
+├── Gotestweb/          # Golang backend (REST API, handlers, DB layer)
+├── docker-compose.yaml # Full-stack local orchestration
+└── package-lock.json
+```
+
+## 👤 Author
+
+**Malek Bouzarkouna** & **Lyes Laïmouche & Yacine Kessal** — Master STL, Sorbonne Université
+
+## 📄 License
+
+No license specified.

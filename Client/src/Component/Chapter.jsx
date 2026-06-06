@@ -24,8 +24,7 @@ const ChapterReader = () => {
     const fetchPages = async () => {
       try {
         setLoading(true);
-        const baseUrl = "https://api.mangadex.org";
-        const response = await axios.get(`${baseUrl}/at-home/server/${chapterId}`);
+        const response = await axios.get(`/api/chapter/pages?id=${chapterId}`);
 
         const chapterBaseUrl = response.data.baseUrl;
         const chapterHash = response.data.chapter.hash;
@@ -124,6 +123,7 @@ const ChapterReader = () => {
               key={index}
               src={pageUrl}
               alt={`Page ${index + 1}`}
+              referrerPolicy="no-referrer"
               style={{ transform: `scale(${scale})` }}
               className="max-w-full h-auto shadow-lg rounded-lg mb-6 transition-transform duration-300"
             />

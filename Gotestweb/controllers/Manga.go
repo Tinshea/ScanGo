@@ -581,3 +581,28 @@ func handleChapterAttributes(attr models.ChapterDetails) models.ChapterDetails {
 
 	return details
 }
+
+func GetChapterPages(w http.ResponseWriter, r *http.Request) {
+	chapterID := r.URL.Query().Get("id")
+	if chapterID == "" {
+		http.Error(w, "ID de chapitre manquant", http.StatusBadRequest)
+		return
+	}
+
+	url := fmt.Sprintf("https://api.mangadex.org/at-home/server/%s", chapterID)
+	res, err := mangadexGet(url)
+	if err != nil {
+		http.Error(w, "Erreur lors de la récupération des pages", http.StatusInternalServerError)
+		return
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		http.Error(w, "Erreur lors de la lecture de la réponse", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(body)
+}

@@ -17,6 +17,19 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+const mangadexUserAgent = "ScanGo/1.0 (malekbouzarkouna58@gmail.com)"
+
+var mangadexClient = &http.Client{}
+
+func mangadexGet(url string) (*http.Response, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", mangadexUserAgent)
+	return mangadexClient.Do(req)
+}
+
 // Fonction d'assistance pour retourner la valeur ou une chaîne vide si la valeur est absente.
 func getStringOrDefault(value string) string {
 	if value == "" {
@@ -52,7 +65,7 @@ func GetManga(w http.ResponseWriter, r *http.Request) {
 
 	u := fmt.Sprintf("https://api.mangadex.org/manga/%s?includes[]=cover_art", mangaID)
 
-	res, err := http.Get(u)
+	res, err := mangadexGet(u)
 	if err != nil {
 		log.Printf("Erreur lors de l'envoi de la requête : %v", err)
 		http.Error(w, "Erreur lors de l'envoi de la requête", http.StatusInternalServerError)
@@ -121,7 +134,7 @@ func GetManga(w http.ResponseWriter, r *http.Request) {
 		paramschap.Set("limit", strconv.Itoa(limit))
 		chaptersURL.RawQuery = paramschap.Encode()
 
-		chaptersRes, err := http.Get(chaptersURL.String())
+		chaptersRes, err := mangadexGet(chaptersURL.String())
 		if err != nil {
 			log.Printf("Erreur lors de l'envoi de la requête pour les chapitres : %v", err)
 			http.Error(w, "Erreur lors de l'envoi de la requête pour les chapitres", http.StatusInternalServerError)
@@ -266,21 +279,21 @@ func HomeManga(w http.ResponseWriter, r *http.Request) {
 		RawQuery: thirdAPIParams.Encode(),
 	}
 
-	res, err := http.Get(u.String())
+	res, err := mangadexGet(u.String())
 	if err != nil {
 		http.Error(w, "Erreur lors de l'envoi de la requête à la première API: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer res.Body.Close()
 
-	secondRes, err := http.Get(secondAPIURL.String())
+	secondRes, err := mangadexGet(secondAPIURL.String())
 	if err != nil {
 		http.Error(w, "Erreur lors de la requête vers la deuxième API: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer secondRes.Body.Close()
 
-	thirdRes, err := http.Get(thirdAPIURL.String())
+	thirdRes, err := mangadexGet(thirdAPIURL.String())
 	if err != nil {
 		http.Error(w, "Erreur lors de la requête vers la deuxième API: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -454,7 +467,7 @@ func GetUserMangaDetails(w http.ResponseWriter, r *http.Request) {
 // fetchMangaDetail retrieves detailed information about a manga from the MangaDex API.
 func fetchMangaDetail(mangaID string) (models.Mangareturn, error) {
 	url := fmt.Sprintf("https://api.mangadex.org/manga/%s?includes[]=cover_art", mangaID)
-	res, err := http.Get(url)
+	res, err := mangadexGet(url)
 	if err != nil {
 		return models.Mangareturn{}, fmt.Errorf("error sending request: %w", err)
 	}
@@ -476,7 +489,7 @@ func fetchMangaDetail(mangaID string) (models.Mangareturn, error) {
 // fetchMangaDetail retrieves detailed information about a manga from the MangaDex API.
 func fetchMangaDetailChapter(mangaID string) (models.MangaReturnWithChapters, error) {
 	url := fmt.Sprintf("https://api.mangadex.org/manga/%s?includes[]=cover_art", mangaID)
-	res, err := http.Get(url)
+	res, err := mangadexGet(url)
 	if err != nil {
 		return models.MangaReturnWithChapters{}, fmt.Errorf("error sending request: %w", err)
 	}
@@ -513,7 +526,7 @@ func fetchMangaDetailChapter(mangaID string) (models.MangaReturnWithChapters, er
 // fetchChapterDetails retrieves detailed information about a chapter from the MangaDex API.
 func fetchChapterDetails(chapterID string) (models.Chapter, error) {
 	url := fmt.Sprintf("https://api.mangadex.org/chapter/%s", chapterID)
-	res, err := http.Get(url)
+	res, err := mangadexGet(url)
 	if err != nil {
 		return models.Chapter{}, fmt.Errorf("error sending request: %w", err)
 	}

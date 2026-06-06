@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import ImageSlider from './ImageSlider';
 import axios from 'axios';
 import DisplayList from './DisplayList';
-import env from '../env'; 
 
 const Home = () => {
   const [mangaList, setMangaList] = useState(null);
@@ -12,7 +11,7 @@ const Home = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get(`${env.API_URL}/api/Home`); // Use the API_URL from env.js
+        const res = await axios.get(`/api/Home`); // Use the API_URL from env.js
 
         setNewMangaList(res.data.Newestmangalist);
         setMangaList(res.data.Mangalist);

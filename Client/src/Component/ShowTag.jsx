@@ -25,7 +25,6 @@ const ShowTag = () => {
       });
       setMangaList(resp.data.Mangalist);
       setMangaListTotal(resp.data.Total);
-      console.log(resp.data);
       } catch (error) {
         console.error('Erreur lors de la récupération des données :', error);
       }

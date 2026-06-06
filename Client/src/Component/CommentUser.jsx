@@ -3,7 +3,6 @@ import axios from "axios";
 import { AuthContext } from "./AuthProvider";
 import LoadingComponent from "./LoadingComponent";
 import { Trash2 } from "lucide-react"; // Icône de suppression
-import env from "../env";
 
 const timeSince = (publishDate) => {
   const commentDate = new Date(publishDate);
@@ -28,7 +27,7 @@ const Comment = ({ comments, setComments }) => {
 
   const handleDelete = async (commentId) => {
     try {
-      await axios.delete(`${env.API_URL}/api/user/chapter/comment?id=${commentId}`);
+      await axios.delete(`/api/user/chapter/comment?id=${commentId}&userId=${user.id}`);
 
       if (setComments) {
         // ✅ Si `setComments` est fourni, mise à jour sans recharger la page

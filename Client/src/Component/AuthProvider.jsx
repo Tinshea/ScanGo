@@ -2,7 +2,6 @@ import React, { createContext, useState, useMemo, useEffect } from 'react';
 import axios from 'axios';
 import PropTypes from 'prop-types';
 import { isExpired, decodeToken } from "react-jwt";
-import env from '../env'; 
 
 export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
@@ -19,7 +18,7 @@ export const AuthProvider = ({ children }) => {
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           setIsAuthenticated(true);
           const userID = ExtractUserIDFromToken(token);
-          const res = await axios.get(`${env.API_URL}/api/User?id=${userID}`);
+          const res = await axios.get(`/api/User?id=${userID}`);
           setUser(res.data);
         };
         fetchData();
@@ -35,7 +34,7 @@ export const AuthProvider = ({ children }) => {
 
   const signIn = async (email, password) => {
     try {
-      const response = await axios.post(`${env.API_URL}/api/signin`, {
+      const response = await axios.post(`/api/signin`, {
         username: email,
         password: password
       });
@@ -50,7 +49,7 @@ export const AuthProvider = ({ children }) => {
 
   const signUp = async (email, password) => {
     try {
-      const response = await axios.post(`${env.API_URL}/api/signup`, {
+      const response = await axios.post(`/api/signup`, {
         username: email,
         password: password
       });

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import axios from "axios";
-import env from "../env";
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,7 +18,7 @@ const Chatbot = () => {
     setInputValue("");
 
     try {
-      const response = await axios.post(`${env.API_URL}/api/chatbot`, {
+      const response = await axios.post(`/api/chatbot`, {
         message: inputValue,
       });
 

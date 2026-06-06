@@ -212,20 +212,6 @@ func GetManga(w http.ResponseWriter, r *http.Request) {
 }
 
 func HomeManga(w http.ResponseWriter, r *http.Request) {
-	client := db.InitializeMongoClient()
-
-	defer db.DisconnectMongoClient(client)
-
-	collection := client.Database("testdb").Collection("testcollection")
-	doc := bson.D{{Key: "nom", Value: "John Doe"}, {Key: "age", Value: 30}}
-	result, err := collection.InsertOne(context.TODO(), doc)
-	if err != nil {
-		http.Error(w, "Erreur lors de l'insertion du document: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	fmt.Println("Document inséré avec succès:", result.InsertedID)
-
 	params := url.Values{}
 	secondAPIParams := url.Values{}
 	thirdAPIParams := url.Values{}
@@ -410,8 +396,7 @@ func extractAltTitles(altTitles []map[string]string) []string {
 }
 
 func GetUserMangaDetails(w http.ResponseWriter, r *http.Request) {
-	client := db.InitializeMongoClient()
-	defer client.Disconnect(context.TODO())
+	client := db.Client
 	userID := r.URL.Query().Get("id")
 	if userID == "" {
 		http.Error(w, "ID utilisateur manquant", http.StatusBadRequest)
@@ -419,7 +404,7 @@ func GetUserMangaDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user models.User
-	err := client.Database("Scango").Collection("User").FindOne(context.TODO(), bson.M{"id": userID}).Decode(&user)
+	err := client.Database(db.DBName).Collection("User").FindOne(context.TODO(), bson.M{"id": userID}).Decode(&user)
 	if err != nil {
 		http.Error(w, "Utilisateur non trouvé dans la base de données", http.StatusNotFound)
 		return

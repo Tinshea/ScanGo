@@ -1,0 +1,14 @@
+# Environnement
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Dependencies
+Client/node_modules/
+
+# Build
+Client/dist/
+
+# OS
+.DS_Store

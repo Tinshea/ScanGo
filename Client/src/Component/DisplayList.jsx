@@ -31,7 +31,6 @@ const DisplayList = ({ title, mangaList }) => {
               limit: Math.max(mangaList.length + 10, ml?.length + 10),
             },
           });
-          console.log(resp.data);
           setMangaList(resp.data.Newestmangalist);
         } catch (error) {
           console.error("Erreur lors de la récupération des données :", error);
@@ -47,7 +46,6 @@ const DisplayList = ({ title, mangaList }) => {
               limit: Math.max(mangaList.length + 10, ml?.length + 10),
             },
           });
-          console.log(resp.data);
           setMangaList(resp.data.Mangalist);
         } catch (error) {
           console.error("Erreur lors de la récupération des données :", error);

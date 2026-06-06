@@ -2,6 +2,7 @@ package main
 
 import (
 	Controllers "Gotestweb/controllers"
+	db "Gotestweb/database"
 	"fmt"
 	"net/http"
 )
@@ -30,7 +31,9 @@ func CorsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 }
 
 func main() {
-	// Enroulez votre gestionnaire avec le middleware CORS
+	db.Connect()
+	defer db.Disconnect()
+
 	http.HandleFunc("/api/Home", CorsMiddleware(Controllers.HomeManga))
 	http.HandleFunc("/api/Manga", CorsMiddleware(Controllers.GetManga))
 	http.HandleFunc("/api/signup", CorsMiddleware(Controllers.SignUp))

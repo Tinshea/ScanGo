@@ -7,9 +7,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -32,10 +33,10 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := db.InitializeMongoClient()
+	client := db.Client
 	// Check if the username already exists
 	var result models.User
-	err = client.Database("Scango").Collection("User").FindOne(context.TODO(), bson.M{"username": user.Username}).Decode(&result)
+	err = client.Database(db.DBName).Collection("User").FindOne(context.TODO(), bson.M{"username": user.Username}).Decode(&result)
 	if err != mongo.ErrNoDocuments {
 		http.Error(w, "Nom d'utilisateur déjà pris", http.StatusBadRequest)
 		return
@@ -69,7 +70,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 
 	// Insert the user document into the database
 
-	collection := client.Database("Scango").Collection("User")
+	collection := client.Database(db.DBName).Collection("User")
 
 	// Insert the document
 	_, err = collection.InsertOne(context.TODO(), newUser)
@@ -102,10 +103,10 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 
 	// Retrieve the user document from the database
 
-	client := db.InitializeMongoClient()
+	client := db.Client
 	// Check if the username already exists
 	var result models.User
-	err = client.Database("Scango").Collection("User").FindOne(context.TODO(), bson.M{"username": user.Username}).Decode(&result)
+	err = client.Database(db.DBName).Collection("User").FindOne(context.TODO(), bson.M{"username": user.Username}).Decode(&result)
 	if err != nil && err != mongo.ErrNoDocuments {
 		http.Error(w, "Erreur lors de la recherche de l'utilisateur dans la base de données", http.StatusInternalServerError)
 		return
@@ -137,21 +138,12 @@ func generateId() string {
 	return fmt.Sprintf("%d", time.Now().UnixNano())
 }
 func generateToken(ID string) (string, error) {
-	// Create a new token object
-	token := jwt.New(jwt.SigningMethodHS256)
-
-	// Set the claims
-	claims := token.Claims.(jwt.MapClaims)
-	claims["id"] = ID
-	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
-
-	// Generate the token string
-	tokenString, err := token.SignedString([]byte("secret"))
-	if err != nil {
-		return "", err
+	claims := jwt.MapClaims{
+		"id":  ID,
+		"exp": time.Now().Add(time.Hour * 24).Unix(),
 	}
-
-	return tokenString, nil
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 }
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
@@ -169,9 +161,9 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	profilePictureFile, profilePictureHeader, _ := r.FormFile("ProfilePicture")
 
 	// Vérifier l'existence de l'utilisateur dans la base de données
-	client := db.InitializeMongoClient()
+	client := db.Client
 	var result models.User
-	err = client.Database("Scango").Collection("User").FindOne(context.TODO(), bson.M{"id": id}).Decode(&result)
+	err = client.Database(db.DBName).Collection("User").FindOne(context.TODO(), bson.M{"id": id}).Decode(&result)
 	if err != nil {
 		http.Error(w, "Utilisateur non trouvé dans la base de données", http.StatusNotFound)
 		return
@@ -202,7 +194,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Effectuer la mise à jour
-	_, err = client.Database("Scango").Collection("User").UpdateOne(context.TODO(), bson.M{"id": id}, bson.M{"$set": update})
+	_, err = client.Database(db.DBName).Collection("User").UpdateOne(context.TODO(), bson.M{"id": id}, bson.M{"$set": update})
 	if err != nil {
 		http.Error(w, "Erreur lors de la mise à jour de l'utilisateur dans la base de données", http.StatusInternalServerError)
 		return
@@ -228,15 +220,14 @@ func checkAuthorization(r *http.Request, username string) bool {
 		}
 
 		// Return the secret key
-		return []byte("secret"), nil
+		return []byte(os.Getenv("JWT_SECRET")), nil
 	})
 	if err != nil {
 		return false
 	}
 
 	// Check if the token is valid
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		// Check if the username matches
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && err == nil {
 		if claims["username"] == username {
 			return true
 		}
@@ -256,9 +247,9 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Retrieve the user document from the database
-	client := db.InitializeMongoClient()
+	client := db.Client
 	var user models.User
-	err := client.Database("Scango").Collection("User").FindOne(context.TODO(), bson.M{"id": userID}).Decode(&user)
+	err := client.Database(db.DBName).Collection("User").FindOne(context.TODO(), bson.M{"id": userID}).Decode(&user)
 	if err != nil {
 		http.Error(w, "Utilisateur non trouvé dans la base de données", http.StatusNotFound)
 		return
@@ -285,8 +276,7 @@ func GetUserProfilPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateUserChapter(w http.ResponseWriter, r *http.Request) {
-	client := db.InitializeMongoClient()
-	defer client.Disconnect(context.TODO())
+	client := db.Client
 
 	var params struct {
 		UserId    string `json:"userId"`
@@ -297,7 +287,7 @@ func UpdateUserChapter(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Error reading request body: %v", err), http.StatusBadRequest)
 		return
 	}
-	collection := client.Database("Scango").Collection("User")
+	collection := client.Database(db.DBName).Collection("User")
 
 	// Filtre pour identifier l'utilisateur
 	filter := bson.M{"id": params.UserId, "mangas.mangaId": params.MangaId}
@@ -350,8 +340,7 @@ func UpdateUserChapter(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateUserFollow(w http.ResponseWriter, r *http.Request) {
-	client := db.InitializeMongoClient()
-	defer client.Disconnect(context.TODO())
+	client := db.Client
 
 	var params struct {
 		UserId  string `json:"userId"`
@@ -369,7 +358,7 @@ func UpdateUserFollow(w http.ResponseWriter, r *http.Request) {
 		"$addToSet": bson.M{"followedMangas": params.MangaId},
 	}
 
-	collection := client.Database("Scango").Collection("User")
+	collection := client.Database(db.DBName).Collection("User")
 	result, err := collection.UpdateOne(context.TODO(), filter, update, options.Update().SetUpsert(true))
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to update user follow list: %v", err), http.StatusInternalServerError)

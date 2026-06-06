@@ -5,7 +5,6 @@ import (
 	"Gotestweb/models"
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -24,7 +23,6 @@ func HandleComment(w http.ResponseWriter, r *http.Request) {
 }
 
 func PostComment(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("PostComment")
 	var comment models.Comment
 	if err := json.NewDecoder(r.Body).Decode(&comment); err != nil {
 		http.Error(w, "Erreur lors de la lecture du corps de la requête: "+err.Error(), http.StatusBadRequest)
@@ -32,10 +30,9 @@ func PostComment(w http.ResponseWriter, r *http.Request) {
 	}
 	comment.ID = generateId()
 	comment.CreatedAt = time.Now()
-	client := db.InitializeMongoClient()
-	defer client.Disconnect(context.TODO())
+	client := db.Client
 	// Add the comment to the database
-	collection := client.Database("Scango").Collection("Comments")
+	collection := client.Database(db.DBName).Collection("Comments")
 	_, err := collection.InsertOne(context.TODO(), comment)
 	if err != nil {
 		http.Error(w, "Erreur lors de l'insertion du commentaire: "+err.Error(), http.StatusInternalServerError)
@@ -47,11 +44,27 @@ func PostComment(w http.ResponseWriter, r *http.Request) {
 
 func DeleteComment(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
-	// Delete the comment from the database
-	client := db.InitializeMongoClient()
-	defer client.Disconnect(context.TODO())
-	collection := client.Database("Scango").Collection("Comments")
-	_, err := collection.DeleteOne(context.TODO(), bson.M{"id": id})
+	userID := r.URL.Query().Get("userId")
+	if id == "" || userID == "" {
+		http.Error(w, "Paramètres manquants", http.StatusBadRequest)
+		return
+	}
+
+	client := db.Client
+	collection := client.Database(db.DBName).Collection("Comments")
+
+	var comment models.Comment
+	err := collection.FindOne(context.TODO(), bson.M{"id": id}).Decode(&comment)
+	if err != nil {
+		http.Error(w, "Commentaire introuvable", http.StatusNotFound)
+		return
+	}
+	if comment.UserID != userID {
+		http.Error(w, "Non autorisé", http.StatusForbidden)
+		return
+	}
+
+	_, err = collection.DeleteOne(context.TODO(), bson.M{"id": id})
 	if err != nil {
 		http.Error(w, "Erreur lors de la suppression du commentaire: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -66,9 +79,8 @@ func GetUserComments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Retrieve comments from the database
-	client := db.InitializeMongoClient()
-	defer client.Disconnect(context.TODO())
-	collection := client.Database("Scango").Collection("Comments")
+	client := db.Client
+	collection := client.Database(db.DBName).Collection("Comments")
 
 	cursor, err := collection.Find(context.TODO(), bson.M{"userid": userID})
 	if err != nil {
@@ -92,9 +104,8 @@ func GetChapterComments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := db.InitializeMongoClient()
-	defer client.Disconnect(context.TODO())
-	collection := client.Database("Scango").Collection("Comments")
+	client := db.Client
+	collection := client.Database(db.DBName).Collection("Comments")
 
 	cursor, err := collection.Find(context.TODO(), bson.M{"chapterid": chapterID})
 	if err != nil {

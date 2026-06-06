@@ -43,13 +43,13 @@ const ImageSlider = ({ mangaList }) => {
         return (
           <div key={index} onClick={() => handleMangaClick(slide.id)} className="carousel-item">
             <div className="inline-block w-full bg-gradient-to-b from-transparent to-[#050816]">
-              <img src={slide.image} alt={`Slide ${index + 1}`} className="main-image" />
+              <img referrerPolicy="no-referrer" src={slide.image} alt={`Slide ${index + 1}`} className="main-image" />
             </div>
             <div className="carousel-overlay-preview">
-              <img src={slide.image} alt={`Slide ${index + 1}`} className="preview-image" />
+              <img referrerPolicy="no-referrer" src={slide.image} alt={`Slide ${index + 1}`} className="preview-image" />
             </div>
             <div className="carousel-flag-preview">
-              <img src={slide.flag} alt={`Slide ${index + 1}`} className="flag-image" />
+              <img referrerPolicy="no-referrer" src={slide.flag} alt={`Slide ${index + 1}`} className="flag-image" />
             </div>
             <div className="flex sm:flex-col absolute bottom-[5%] left-1/2 -translate-x-1/2 w-full h-[14vh] p-2 md:p-4 text-white text-left text-base box-border overflow-hidden ml-[10px]">
               <h3 className="font-extrabold text-rose-600">{slide.title}</h3>

@@ -78,6 +78,7 @@ const MangaDetails = () => {
       {/* Bannière avec dégradé */}
       <div className="relative w-full h-[40vh] overflow-hidden">
         <img
+          referrerPolicy="no-referrer"
           src={manga.image}
           alt="manga-info-banner"
           className="relative inset-0 w-full h-full object-cover [object-position:center_25%]"
@@ -90,6 +91,7 @@ const MangaDetails = () => {
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-full lg:w-1/4">
           <div className="flex items-start space-x-4">
             <img
+              referrerPolicy="no-referrer"
               src={manga.image}
               alt={`${manga.title} Cover`}
               className="w-36 h-auto rounded-md"

@@ -2,9 +2,8 @@
 
 > Personal full-stack project by Malek Bouzarkouna
 
-A full-stack manga reader web application inspired by MangaDex, built with React, Golang, and MongoDB. It aggregates real-time manga data from the MangaDex API, supports a complete user account system with social features, and integrates an AI-powered chatbot for navigation and recommendations.
+A full-stack manga reader web application inspired by MangaDex, built with React, Golang, and MongoDB. It aggregates real-time manga data from the MangaDex API, supports a complete user account system with social features.
 
-🌐 **Live demo:** [scan-go-five.vercel.app](https://scan-go-five.vercel.app)
 
 ## 🛠️ Tech Stack
 
@@ -58,8 +57,6 @@ Readers can post comments on individual chapters and interact with the community
 ### Profile Customization
 Each user can personalize their profile with a custom username, banner image, and profile picture — all stored and delivered via Cloudinary.
 
-### 🤖 AI Chatbot
-An integrated assistant helps users navigate the platform, discover new series, and get personalized recommendations.
 
 ## 🗂️ Project Structure
 

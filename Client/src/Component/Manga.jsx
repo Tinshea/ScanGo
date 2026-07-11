@@ -17,7 +17,7 @@ export default function Manga({ mangaData }) {
     
     return (
         <li className="manga-card" onClick={handleMangaClick}>
-          <img src={mangaData.image} alt={mangaData.title} className="manga-cover" />
+          <img referrerPolicy="no-referrer" src={mangaData.image} alt={mangaData.title} className="manga-cover" />
           <img src={mangaData.flag} alt="Flag" className="manga-flag" />
           <div className="manga-info">
             <div className="manga-description-overlay">

@@ -6,7 +6,6 @@ import ChapterList from "./ChapterList"; // Gère l'affichage des chapitres
 import LoadingComponent from "./LoadingComponent";
 import PopupComponent from "./PopupComponent";
 import "../Css/MangaDetails.css";
-import env from "../env";
 
 const MangaDetails = () => {
   const { id } = useParams();
@@ -20,7 +19,7 @@ const MangaDetails = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get(`${env.API_URL}/api/Manga?id=${id}`);
+        const res = await axios.get(`/api/Manga?id=${id}`);
         setManga(res.data.MangaDetailList);
         if (isAuthenticated && user.followedMangas.includes(id)) {
           setIsFollowing(true);
@@ -39,7 +38,7 @@ const MangaDetails = () => {
 
   const handleFollowClick = () => {
     if (isAuthenticated) {
-      axios.post(`${env.API_URL}/api/user/follow/`, { userId: user.id, mangaId: id });
+      axios.post(`/api/user/follow/`, { userId: user.id, mangaId: id });
       setPopupMessage("You are now following!");
       setIsFollowing(true);
     } else {
@@ -50,7 +49,7 @@ const MangaDetails = () => {
 
   const handleUnfollowClick = () => {
     if (isAuthenticated) {
-      axios.post(`${env.API_URL}/api/user/unfollow/`, { userId: user.id, mangaId: id });
+      axios.post(`/api/user/unfollow/`, { userId: user.id, mangaId: id });
       setPopupMessage("You are no longer following!");
       setIsFollowing(false);
     } else {
@@ -79,6 +78,7 @@ const MangaDetails = () => {
       {/* Bannière avec dégradé */}
       <div className="relative w-full h-[40vh] overflow-hidden">
         <img
+          referrerPolicy="no-referrer"
           src={manga.image}
           alt="manga-info-banner"
           className="relative inset-0 w-full h-full object-cover [object-position:center_25%]"
@@ -91,6 +91,7 @@ const MangaDetails = () => {
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-full lg:w-1/4">
           <div className="flex items-start space-x-4">
             <img
+              referrerPolicy="no-referrer"
               src={manga.image}
               alt={`${manga.title} Cover`}
               className="w-36 h-auto rounded-md"

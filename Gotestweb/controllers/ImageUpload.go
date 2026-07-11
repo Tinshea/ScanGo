@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"mime/multipart"
+	"os"
 
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api"
@@ -11,10 +12,11 @@ import (
 )
 
 func UploadBanner(imageURL multipart.File, imageid string) string {
-	// Start by creating a new instance of Cloudinary using CLOUDINARY_URL environment variable.
-	// Alternatively you can use cloudinary.NewFromParams() or cloudinary.NewFromURL().
-	var CLOUDINARY_URL = "cloudinary://263558657856659:X-1D2sXdrHSwzbhMT7E8asWky9g@dhmplkcxd"
-	cld, err := cloudinary.NewFromURL(CLOUDINARY_URL)
+	cloudinaryURL := os.Getenv("CLOUDINARY_URL")
+	if cloudinaryURL == "" {
+		log.Fatal("CLOUDINARY_URL non défini")
+	}
+	cld, err := cloudinary.NewFromURL(cloudinaryURL)
 	if err != nil {
 		log.Fatalf("Failed to initialize Cloudinary, %v", err)
 	}
@@ -39,10 +41,11 @@ func UploadBanner(imageURL multipart.File, imageid string) string {
 }
 
 func UploadProfilPicture(imageURL multipart.File, imageid string) string {
-	// Start by creating a new instance of Cloudinary using CLOUDINARY_URL environment variable.
-	// Alternatively you can use cloudinary.NewFromParams() or cloudinary.NewFromURL().
-	var CLOUDINARY_URL = "cloudinary://263558657856659:X-1D2sXdrHSwzbhMT7E8asWky9g@dhmplkcxd"
-	cld, err := cloudinary.NewFromURL(CLOUDINARY_URL)
+	cloudinaryURL := os.Getenv("CLOUDINARY_URL")
+	if cloudinaryURL == "" {
+		log.Fatal("CLOUDINARY_URL non défini")
+	}
+	cld, err := cloudinary.NewFromURL(cloudinaryURL)
 	if err != nil {
 		log.Fatalf("Failed to initialize Cloudinary, %v", err)
 	}

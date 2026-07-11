@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
-import env from "../env";
 
 const EditProfile = () => {
   const { id } = useParams();
@@ -58,7 +57,7 @@ const EditProfile = () => {
     data.append("ProfilePicture", formData.ProfilePicture);
 
     try {
-      const response = await axios.put(`${env.API_URL}/api/updateuser`, data, {
+      const response = await axios.put(`/api/updateuser`, data, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

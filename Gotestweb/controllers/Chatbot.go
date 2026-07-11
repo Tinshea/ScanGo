@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 )
 
 // Structure pour la requête à l'API AIMLAPI
@@ -35,7 +36,7 @@ func CallAIMLAPIChatbot(message string) (string, error) {
 	apiURL := "https://api.aimlapi.com/v1/chat/completions"
 
 	// Votre clé API AIMLAPI
-	apiKey := "71a4fa08719841da9545dea864652b2e" 
+	apiKey := os.Getenv("AIMLAPI_KEY")
 
 	// Créer la requêtea
 	requestBody := ChatCompletionRequest{

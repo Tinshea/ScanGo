@@ -10,6 +10,9 @@ RUN go mod download
 # Copier tout le code source
 COPY . .
 
+# Mettre à jour go.sum et télécharger les nouvelles dépendances
+RUN go mod tidy
+
 # Compiler l'application en statique pour Linux AMD64
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o app .
 

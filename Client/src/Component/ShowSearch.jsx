@@ -4,7 +4,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import Manga from "./Manga";
 import LoadingComponent from "./LoadingComponent";
 import Pagination from "./Pagination";
-import env from "../env";
 
 const ShowSearch = () => {
   const [offset, setOffset] = useState(0);
@@ -17,7 +16,7 @@ const ShowSearch = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const resp = await axios.get(`${env.API_URL}/api/Home`, {
+        const resp = await axios.get(`/api/Home`, {
           params: {
             title: query,
             offset,

@@ -2,6 +2,7 @@ package main
 
 import (
 	Controllers "Gotestweb/controllers"
+	db "Gotestweb/database"
 	"fmt"
 	"net/http"
 )
@@ -30,7 +31,9 @@ func CorsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 }
 
 func main() {
-	// Enroulez votre gestionnaire avec le middleware CORS
+	db.Connect()
+	defer db.Disconnect()
+
 	http.HandleFunc("/api/Home", CorsMiddleware(Controllers.HomeManga))
 	http.HandleFunc("/api/Manga", CorsMiddleware(Controllers.GetManga))
 	http.HandleFunc("/api/signup", CorsMiddleware(Controllers.SignUp))
@@ -42,6 +45,7 @@ func main() {
 	http.HandleFunc("/api/user/chapter/", CorsMiddleware(Controllers.UpdateUserChapter))
 	http.HandleFunc("/api/user/follow/", CorsMiddleware(Controllers.UpdateUserFollow))
 	http.HandleFunc("/api/user/chapter/comment", CorsMiddleware(Controllers.HandleComment))
+	http.HandleFunc("/api/chapter/pages", CorsMiddleware(Controllers.GetChapterPages))
 	http.Handle("/api/chatbot", Controllers.EnableCORS(http.HandlerFunc(Controllers.ChatbotHandler)))
 	fmt.Println("Server is listening on port 8080...")
 	err := http.ListenAndServe(":8080", nil)

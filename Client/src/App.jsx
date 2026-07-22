@@ -8,6 +8,7 @@ import Navbar from "./Component/Navbar";
 import EditProfile from "./Component/EditProfile";
 import ShowSearch from "./Component/ShowSearch";
 import ShowTag from "./Component/ShowTag";
+import Browse from "./Component/Browse";
 import ProtectedRoute from "./Component/ProtectedRoute";
 import NotFound from "./Component/NotFound";
 
@@ -41,6 +42,7 @@ function App() {
           <Route path="/User/:id" element={<ProfilePage />} />
           <Route path="/search/:query" element={<ShowSearch />} />
           <Route path="/tag/:query" element={<ShowTag />} />
+          <Route path="/browse/:section" element={<Browse />} />
 
           {/* Toute autre URL affiche une page dédiée plutôt qu'un écran vide. */}
           <Route path="*" element={<NotFound />} />

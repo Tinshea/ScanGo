@@ -1,26 +1,20 @@
-import React, { useState } from "react";
+import React from "react";
 import PropTypes from "prop-types";
+import { Link } from "react-router-dom";
 import Manga from "./Manga";
 import LoadingComponent from "./LoadingComponent";
-import api from "../api";
 
-const LOAD_MORE_STEP = 10;
-
-// DisplayList affiche une rangée de mangas.
+// DisplayList affiche une rangée de mangas défilant horizontalement.
 //
-// `responseKey` désigne le champ à lire dans la réponse de /api/Home pour
-// charger davantage de titres. Sans cette prop, le bouton « voir plus » est
-// masqué : c'est le cas de la liste des titres suivis, qui ne provient pas de
-// cet endpoint et pour laquelle le bouton ne faisait rien.
-const DisplayList = ({ title, mangaList, responseKey }) => {
-  const [extraItems, setExtraItems] = useState(null);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-
-  // La liste affichée dérive des props ; l'ancienne copie systématique dans un
-  // state via useEffect était redondante et introduisait un rendu de retard.
-  const items = extraItems ?? mangaList;
-
-  if (!items) {
+// `section` active le bouton « voir tout », qui mène à la grille paginée de
+// la section. Sans cette prop le bouton est masqué : c'est le cas de la liste
+// des titres suivis, qui ne correspond à aucune section du catalogue.
+//
+// Le bouton chargeait auparavant dix titres de plus dans la rangée. Comme
+// celle-ci ne défile pas automatiquement, les nouveaux titres arrivaient hors
+// écran et le clic paraissait sans effet.
+const DisplayList = ({ title, mangaList, section }) => {
+  if (!mangaList) {
     return (
       <div>
         <h1 className="Sectiontitle">{title}</h1>
@@ -29,40 +23,25 @@ const DisplayList = ({ title, mangaList, responseKey }) => {
     );
   }
 
-  // Une seule branche générique remplace le switch qui contenait deux fois le
-  // même `case "Nouveauté"` — le second étant inatteignable.
-  const handleMoreClick = async () => {
-    if (!responseKey) return;
-    setIsLoadingMore(true);
-    try {
-      const resp = await api.get("/Home", {
-        params: { limit: items.length + LOAD_MORE_STEP },
-      });
-      setExtraItems(resp.data[responseKey] || items);
-    } catch {
-      // Échec silencieux : la liste déjà affichée reste utilisable.
-    } finally {
-      setIsLoadingMore(false);
-    }
-  };
+  const items = mangaList;
 
   return (
     <div className="Mangalist-conteneur">
       <div className="Mangalist-header">
         <h1 className="font-extrabold Sectiontitle">{title}</h1>
 
-        {responseKey && (
-          <button
-            onClick={handleMoreClick}
-            disabled={isLoadingMore}
-            title="Afficher plus de titres"
-            aria-label="Afficher plus de titres"
-            className="group cursor-pointer outline-none hover:rotate-90 duration-300 disabled:opacity-50"
+        {section && (
+          <Link
+            to={`/browse/${section}`}
+            title={`Voir tout : ${title}`}
+            aria-label={`Voir tous les titres de la section ${title}`}
+            className="group flex items-center gap-2 cursor-pointer outline-none text-amber-50 hover:text-teal-300 duration-300"
           >
+            <span className="text-sm font-semibold">Voir tout</span>
             {/* class= et stroke-width= étaient ignorés par React : les styles
                 Tailwind ne s'appliquaient pas sur ce bouton. */}
             <svg
-              className="stroke-amber-50 fill-none group-hover:fill-teal-800 group-active:stroke-teal-200 group-active:fill-teal-600 group-active:duration-0 duration-300"
+              className="stroke-current fill-none group-hover:rotate-90 duration-300"
               viewBox="0 0 24 24"
               height="30px"
               width="30px"
@@ -75,7 +54,7 @@ const DisplayList = ({ title, mangaList, responseKey }) => {
               <path strokeWidth="1.5" d="M8 12H16" />
               <path strokeWidth="1.5" d="M12 16V8" />
             </svg>
-          </button>
+          </Link>
         )}
       </div>
 
@@ -97,7 +76,7 @@ DisplayList.propTypes = {
   // La liste est nulle pendant le chargement : la marquer `isRequired`
   // déclenchait un avertissement PropTypes à chaque montage.
   mangaList: PropTypes.array,
-  responseKey: PropTypes.string,
+  section: PropTypes.oneOf(["nouveaute", "explorer", "populaire"]),
 };
 
 export default DisplayList;

@@ -310,6 +310,70 @@ func chapterNumber(c models.Chapter) float64 {
 	return n
 }
 
+// Sections de catalogue exposées au front.
+const (
+	SectionExplore = "explorer"
+	SectionNewest  = "nouveaute"
+	SectionPopular = "populaire"
+)
+
+// sectionParams construit les paramètres MangaDex d'une section.
+//
+// Factorisé pour que la page d'accueil et la page « voir tout » interrogent
+// exactement le même classement — sans quoi les deux vues divergeraient.
+func sectionParams(section string, limit, offset int) url.Values {
+	params := url.Values{}
+	params.Set("limit", strconv.Itoa(limit))
+	params.Set("offset", strconv.Itoa(offset))
+	params.Set("includes[]", "cover_art")
+	params.Set("hasAvailableChapters", "true")
+
+	switch section {
+	case SectionNewest:
+		params.Set("order[createdAt]", "desc")
+	case SectionPopular:
+		params.Set("order[followedCount]", "desc")
+	}
+	return params
+}
+
+// BrowseManga alimente la page « voir tout » d'une section, avec pagination.
+//
+// Endpoint distinct de /api/Home : paginer via ce dernier déclencherait trois
+// appels MangaDex par page affichée pour n'en exploiter qu'un.
+func BrowseManga(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	q := r.URL.Query()
+
+	section := q.Get("section")
+	switch section {
+	case SectionExplore, SectionNewest, SectionPopular:
+	case "":
+		section = SectionExplore
+	default:
+		http.Error(w, "Section inconnue", http.StatusBadRequest)
+		return
+	}
+
+	limit := clampInt(q.Get("limit"), 24, 1, 100)
+	offset := clampInt(q.Get("offset"), 0, 0, 10000)
+
+	res, err := fetchMangaList(ctx, sectionParams(section, limit, offset))
+	if err != nil {
+		log.Printf("BrowseManga(%s): %v", section, err)
+		http.Error(w, "Impossible de récupérer le catalogue", mangadex.HTTPStatus(err))
+		return
+	}
+
+	writeJSON(w, map[string]interface{}{
+		"Section":   section,
+		"Mangalist": extractMangasData(res),
+		"Total":     res.Total,
+		"Limit":     res.Limit,
+		"Offset":    res.Offset,
+	})
+}
+
 // HomeManga alimente la page d'accueil : exploration, nouveautés, populaires.
 func HomeManga(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -319,11 +383,7 @@ func HomeManga(w http.ResponseWriter, r *http.Request) {
 	offset := clampInt(q.Get("offset"), 0, 0, 10000)
 
 	// Exploration : pilotée par la recherche et les tags.
-	browse := url.Values{}
-	browse.Set("limit", strconv.Itoa(limit))
-	browse.Set("offset", strconv.Itoa(offset))
-	browse.Set("includes[]", "cover_art")
-	browse.Set("hasAvailableChapters", "true")
+	browse := sectionParams(SectionExplore, limit, offset)
 	if title := q.Get("title"); title != "" {
 		browse.Set("title", title)
 	}
@@ -341,19 +401,8 @@ func HomeManga(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Nouveautés : les derniers titres ajoutés.
-	newest := url.Values{}
-	newest.Set("limit", strconv.Itoa(limit))
-	newest.Set("includes[]", "cover_art")
-	newest.Set("hasAvailableChapters", "true")
-	newest.Set("order[createdAt]", "desc")
-
-	// Populaires : classement par nombre de suivis.
-	popular := url.Values{}
-	popular.Set("limit", strconv.Itoa(limit))
-	popular.Set("includes[]", "cover_art")
-	popular.Set("hasAvailableChapters", "true")
-	popular.Set("order[followedCount]", "desc")
+	newest := sectionParams(SectionNewest, limit, 0)
+	popular := sectionParams(SectionPopular, limit, 0)
 
 	browseRes, err := fetchMangaList(ctx, browse)
 	if err != nil {

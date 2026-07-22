@@ -47,8 +47,8 @@ const Home = () => {
       )}
 
       <ImageSlider mangaList={popularMangaList} />
-      <DisplayList title="Nouveauté" mangaList={newMangaList} responseKey="Newestmangalist" />
-      <DisplayList title="Explorer" mangaList={mangaList} responseKey="Mangalist" />
+      <DisplayList title="Nouveauté" mangaList={newMangaList} section="nouveaute" />
+      <DisplayList title="Explorer" mangaList={mangaList} section="explorer" />
     </div>
   );
 };

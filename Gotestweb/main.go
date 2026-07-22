@@ -79,6 +79,7 @@ func routes() *http.ServeMux {
 	// --- Routes publiques (lecture du catalogue, authentification) ---
 	mux.HandleFunc("/api/Home", public(Controllers.HomeManga))
 	mux.HandleFunc("/api/Manga", public(Controllers.GetManga))
+	mux.HandleFunc("/api/browse", public(Controllers.BrowseManga))
 	mux.HandleFunc("/api/chapter/pages", public(Controllers.GetChapterPages))
 	mux.HandleFunc("/api/tags", public(Controllers.GetTags))
 	mux.HandleFunc("/api/signup", public(Controllers.SignUp))

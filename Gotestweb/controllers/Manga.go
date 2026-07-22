@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -117,9 +118,11 @@ func extractMangaData(manga models.Manga) models.Mangareturn {
 		countryCode = "unknown"
 	}
 
+	altTitles := initializeAltTitles(manga.Attributes.AltTitles)
+
 	return models.Mangareturn{
-		Title:         manga.Attributes.Title["en"],
-		AltTitles:     initializeAltTitles(manga.Attributes.AltTitles),
+		Title:         pickTitle(manga.Attributes.Title, altTitles),
+		AltTitles:     altTitles,
 		Description:   initializeDescriptions(manga.Attributes.Description),
 		Type:          manga.Type,
 		Image:         imageURL,
@@ -130,6 +133,44 @@ func extractMangaData(manga models.Manga) models.Mangareturn {
 		Year:          manga.Attributes.Year,
 		ContentRating: manga.Attributes.ContentRating,
 	}
+}
+
+// titleFallbackOrder définit les langues préférées pour l'affichage.
+// « ja-ro » est le japonais romanisé, souvent le seul titre présent.
+var titleFallbackOrder = []string{"en", "ja-ro", "ja", "ko-ro", "zh-ro"}
+
+// pickTitle choisit un titre affichable.
+//
+// MangaDex ne garantit pas la présence d'un titre anglais dans le champ
+// `title` : pour la majorité des séries, il ne contient que « ja-ro » et la
+// version anglaise se trouve dans `altTitles`. Lire uniquement title["en"]
+// laissait donc la plupart des vignettes sans texte.
+func pickTitle(title map[string]string, altTitles map[string]string) string {
+	for _, lang := range titleFallbackOrder {
+		if v := strings.TrimSpace(title[lang]); v != "" {
+			return v
+		}
+	}
+	for _, lang := range titleFallbackOrder {
+		if v := strings.TrimSpace(altTitles[lang]); v != "" {
+			return v
+		}
+	}
+	// Dernier recours : n'importe quelle langue disponible, en parcourant les
+	// clés triées pour que le résultat reste stable d'un appel à l'autre.
+	for _, source := range []map[string]string{title, altTitles} {
+		keys := make([]string, 0, len(source))
+		for k := range source {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			if v := strings.TrimSpace(source[k]); v != "" {
+				return v
+			}
+		}
+	}
+	return "Sans titre"
 }
 
 func initializeDescriptions(descs map[string]string) map[string]string {

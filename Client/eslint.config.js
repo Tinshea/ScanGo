@@ -7,7 +7,16 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 export default [
   { ignores: ['dist'] },
   {
-    files: ['**/*.{js,jsx}'],
+    // Les fichiers de configuration s'exécutent sous Node, pas dans le
+    // navigateur : sans ce bloc, `process` y était signalé comme non défini.
+    files: ['*.config.js'],
+    languageOptions: {
+      globals: globals.node,
+      parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+    },
+  },
+  {
+    files: ['src/**/*.{js,jsx}'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,

@@ -1,62 +1,73 @@
-import React, { useContext } from "react";
-import { motion } from "framer-motion";
+import { useContext, useEffect } from "react";
 import PropTypes from "prop-types";
+import { X } from "lucide-react";
 import { AuthContext } from "./AuthContext";
 import SignInPage from "./SignInPage";
-import { useNavigate } from "react-router-dom";
 import ProfilPreview from "./ProfilPreview";
-import { X } from "lucide-react"; // Icône de fermeture
 
+/**
+ * Panneau latéral du compte.
+ *
+ * L'animation framer-motion a été remplacée par une transition CSS sur
+ * transform, moins coûteuse et automatiquement neutralisée par la règle
+ * prefers-reduced-motion posée dans index.css.
+ *
+ * Le voile était une div cliquable sans rôle : c'est désormais un bouton, donc
+ * atteignable au clavier, et la touche Échap ferme le panneau.
+ */
 const SidePanel = ({ isOpen, onClose }) => {
   const { isAuthenticated, user } = useContext(AuthContext);
-  let navigate = useNavigate();
 
-  const handlegoprofil = () => {
-    navigate(`/User/${user.id}`);
-  };
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const onKey = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isOpen, onClose]);
 
   return (
     <>
-      {/* Overlay avec opacité réduite et effet de flou */}
       {isOpen && (
-        <div
-          className="inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 transition-opacity duration-300"
+        <button
+          type="button"
+          aria-label="Fermer le panneau"
           onClick={onClose}
+          className="fixed inset-0 z-40 bg-ink-950/70 backdrop-blur-sm"
         />
       )}
 
-      {/* Panneau latéral animé */}
-      <motion.div
-        initial={{ x: "100%" }}
-        animate={{ x: isOpen ? 0 : "100%" }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-        className="fixed top-0 right-0 w-[22rem] h-full bg-gray-900/80 shadow-2xl rounded-l-xl backdrop-blur-lg p-6 z-50 flex flex-col border-l border-gray-700"
+      <aside
+        aria-hidden={!isOpen}
+        className={`fixed right-0 top-0 z-50 flex h-dvh w-[22rem] max-w-full flex-col border-l border-white/10 bg-ink-900 shadow-2xl transition-transform duration-300 ease-out-expo ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        }`}
       >
-        {/* Bouton de fermeture */}
-        <button
-          className="self-end text-gray-300 hover:text-white transition-transform duration-200 hover:scale-110"
-          onClick={onClose}
-        >
-          <X className="w-7 h-7" />
-        </button>
+        <div className="flex justify-end p-4">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fermer"
+            className="grid h-9 w-9 place-items-center rounded-full text-ink-400 transition-colors duration-300 hover:bg-white/5 hover:text-ink-050"
+          >
+            <X size={18} strokeWidth={2} />
+          </button>
+        </div>
 
-        {/* Contenu du panneau */}
-        {isAuthenticated ? (
-          <div className="flex flex-col items-center mt-6 space-y-4">
-            <ProfilPreview user={user} handlegoprofil={handlegoprofil} />
-            <button
-              onClick={handlegoprofil}
-              className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition duration-300 shadow-md"
-            >
-              Voir le profil
-            </button>
-          </div>
-        ) : (
-          <div className="flex justify-center items-center h-full">
-            <SignInPage />
-          </div>
-        )}
-      </motion.div>
+        {/* Le contenu n'est monté que panneau ouvert. Rendu en permanence, le
+            titre « Connexion » du formulaire apparaissait dans le DOM avant le
+            h1 de la page et cassait la hiérarchie des titres sur toutes les
+            routes. */}
+        <div className="flex-1 overflow-y-auto px-6 pb-8">
+          {isOpen &&
+            (isAuthenticated ? (
+              <ProfilPreview user={user} onNavigate={onClose} />
+            ) : (
+              <SignInPage />
+            ))}
+        </div>
+      </aside>
     </>
   );
 };

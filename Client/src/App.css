@@ -1,50 +1,26 @@
+/* Les styles globaux (fond, typographie, barres de défilement, focus) vivent
+   désormais dans index.css avec les jetons @theme. Ce fichier ne garde que ce
+   qui relève de la coque applicative.
 
+   Retiré d'ici : body { height: 100vh } qui provoquait un saut de mise en page
+   sur iOS Safari, la police Arial codée en dur, et les couleurs posées à la
+   main en dehors de toute rampe. */
 
-body{
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #050816;
-    color: rgb(255, 255, 255);
-    overflow-x: hidden;
-    padding-top: 20px; /* Ajustez cette valeur en fonction de la hauteur de votre barre de navigation */
-    height: 100vh;
+.App {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* La règle « * { max-width: 100% } » a été retirée : elle s'appliquait à tous
+   les éléments sans distinction et cassait les conteneurs à défilement
+   horizontal. Le débordement est traité au cas par cas. */
+img,
+video,
+svg {
   max-width: 100%;
 }
-
-/* Style pour la scrollbar sur les éléments qui défilent horizontalement */
-*::-webkit-scrollbar {
-  width: 8px; /* Largeur de la scrollbar */
-  background: transparent; /* Fond transparent pour la scrollbar */
-}
-
-*::-webkit-scrollbar-thumb {
-  background: #f0f1f3; /* Couleur du thumb (la partie que vous pouvez déplacer) */
-  border-radius: 4px; /* Coins arrondis pour le thumb */
-}
-
-/* Style pour Firefox */
-* {
-  scrollbar-width: thin; /* 'auto' ou 'thin' */
-  scrollbar-color: #f0f1f3 transparent; /* couleur du thumb et couleur du track */
-}
-
-/* Si vous souhaitez également réinitialiser le style au passage de la souris */
-*::-webkit-scrollbar-thumb:hover {
-  background: #f9fafb; /* Couleur plus foncée au survol */
-}
-
-/* Cacher le fond de la scrollbar */
-*::-webkit-scrollbar-track {
-  background: transparent; /* Fond transparent pour le track */
-}
-
-/* Pour cacher les boutons de la scrollbar dans Webkit */
-*::-webkit-scrollbar-button {
-  display: none;
-}
-

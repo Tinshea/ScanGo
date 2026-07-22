@@ -1,6 +1,7 @@
-import React, { useContext, useState } from "react";
+import { useContext, useState } from "react";
 import PropTypes from "prop-types";
 import { AuthContext } from "./AuthContext";
+import { fieldClass, labelClass, primaryButton } from "../styles/form";
 
 const MIN_PASSWORD_LEN = 8;
 
@@ -15,8 +16,6 @@ const SignUp = ({ handleSwitch }) => {
 
     const { username, password } = event.target.elements;
 
-    // Contrôle local aligné sur la règle du serveur, pour éviter un
-    // aller-retour réseau sur une saisie manifestement invalide.
     if (password.value.length < MIN_PASSWORD_LEN) {
       setError(`Le mot de passe doit contenir au moins ${MIN_PASSWORD_LEN} caractères.`);
       return;
@@ -24,54 +23,68 @@ const SignUp = ({ handleSwitch }) => {
 
     setIsSubmitting(true);
     const result = await signUp(username.value, password.value);
-    if (!result.ok) {
-      setError(result.error);
-    }
+    if (!result.ok) setError(result.error);
     setIsSubmitting(false);
   };
 
   return (
-    <div className="text-white">
-      <h2 className="text-2xl font-semibold text-center mb-4">Créer un compte</h2>
+    <div>
+      <h2 className="mb-5 text-xl text-ink-050">Créer un compte</h2>
 
-      <form onSubmit={handleSignUp} className="flex flex-col space-y-4">
+      <form onSubmit={handleSignUp} className="flex flex-col gap-4">
         {error && (
-          <p className="text-red-400 text-sm text-center" role="alert">
+          <p role="alert" className="text-sm text-brand-400">
             {error}
           </p>
         )}
 
-        <input
-          name="username"
-          type="text"
-          placeholder="Nom d'utilisateur"
-          autoComplete="username"
-          maxLength={32}
-          required
-          className="w-full px-4 py-2 bg-transparent border border-white rounded-md focus:ring-2 focus:ring-green-500 outline-none"
-        />
-        <input
-          name="password"
-          type="password"
-          placeholder="Mot de passe (8 caractères minimum)"
-          autoComplete="new-password"
-          minLength={MIN_PASSWORD_LEN}
-          required
-          className="w-full px-4 py-2 bg-transparent border border-white rounded-md focus:ring-2 focus:ring-green-500 outline-none"
-        />
+        <div>
+          <label htmlFor="signup-username" className={labelClass}>
+            Nom d&apos;utilisateur
+          </label>
+          <input
+            id="signup-username"
+            name="username"
+            type="text"
+            autoComplete="username"
+            maxLength={32}
+            required
+            className={fieldClass}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="signup-password" className={labelClass}>
+            Mot de passe
+          </label>
+          <input
+            id="signup-password"
+            name="password"
+            type="password"
+            autoComplete="new-password"
+            minLength={MIN_PASSWORD_LEN}
+            required
+            className={fieldClass}
+          />
+          <p className="mt-1.5 text-xs text-ink-400">8 caractères minimum</p>
+        </div>
 
         <button
           type="submit"
           disabled={isSubmitting}
-          className="bg-green-500 hover:bg-green-600 text-white py-2 rounded-md transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`mt-1 ${primaryButton}`}
         >
           {isSubmitting ? "Création..." : "Créer mon compte"}
         </button>
       </form>
 
-      <p className="mt-4 text-center">
+      <p className="mt-5 text-center text-sm text-ink-400">
         Déjà un compte ?{" "}
-        <button onClick={handleSwitch} className="text-green-400 hover:underline">
+        <button
+          type="button"
+          onClick={handleSwitch}
+          className="font-semibold text-brand-400 hover:underline"
+        >
           Se connecter
         </button>
       </p>

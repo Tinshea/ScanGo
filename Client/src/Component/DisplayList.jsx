@@ -1,87 +1,110 @@
-import React from "react";
+import { useRef } from "react";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
+import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import Manga from "./Manga";
 import { SkeletonRow } from "./Skeleton";
 
-// DisplayList affiche une rangée de mangas défilant horizontalement.
-//
-// `section` active le bouton « voir tout », qui mène à la grille paginée de
-// la section. Sans cette prop le bouton est masqué : c'est le cas de la liste
-// des titres suivis, qui ne correspond à aucune section du catalogue.
-//
-// Le bouton chargeait auparavant dix titres de plus dans la rangée. Comme
-// celle-ci ne défile pas automatiquement, les nouveaux titres arrivaient hors
-// écran et le clic paraissait sans effet.
-const DisplayList = ({ title, mangaList, section }) => {
-  // L'état de chargement conserve la structure définitive : même conteneur,
-  // même en-tête, même hauteur de rangée. Le titre reste lisible au lieu de
-  // laisser une page vide, et rien ne bouge quand les données arrivent.
-  if (!mangaList) {
-    return (
-      <div className="Mangalist-conteneur">
-        <div className="Mangalist-header">
-          <h1 className="font-extrabold Sectiontitle">{title}</h1>
-        </div>
-        <SkeletonRow />
-      </div>
-    );
-  }
+/**
+ * Rangée horizontale d'une section du catalogue.
+ *
+ * La rangée défilait sans aucun moyen de la parcourir autrement qu'à la
+ * molette horizontale : les titres au-delà du bord droit étaient inatteignables
+ * au clavier comme à la souris. Des commandes de défilement explicites ont été
+ * ajoutées, et le lien « Voir tout » mène à la grille paginée de la section.
+ *
+ * Le titre de section est un h2. Il était auparavant un h1, ce qui donnait
+ * deux h1 sur la page d'accueil, tous deux placés après des h2 et des h3.
+ */
+const DisplayList = ({ title, mangaList, section, description }) => {
+  const railRef = useRef(null);
 
-  const items = mangaList;
+  const scrollBy = (direction) => {
+    const rail = railRef.current;
+    if (!rail) return;
+    // Défile d'environ une page visible, en gardant un chevauchement.
+    rail.scrollBy({
+      left: direction * (rail.clientWidth * 0.8),
+      behavior: "smooth",
+    });
+  };
 
   return (
-    <div className="Mangalist-conteneur">
-      <div className="Mangalist-header">
-        <h1 className="font-extrabold Sectiontitle">{title}</h1>
+    <section className="container-page py-10 md:py-14">
+      <header className="mb-5 flex items-end justify-between gap-4">
+        <div>
+          <h2 className="text-2xl md:text-3xl text-ink-050">{title}</h2>
+          {description && (
+            <p className="mt-1 text-sm text-ink-400">{description}</p>
+          )}
+        </div>
 
-        {section && (
-          <Link
-            to={`/browse/${section}`}
-            title={`Voir tout : ${title}`}
-            aria-label={`Voir tous les titres de la section ${title}`}
-            className="group flex items-center gap-2 cursor-pointer outline-none text-amber-50 hover:text-teal-300 duration-300"
-          >
-            <span className="text-sm font-semibold">Voir tout</span>
-            {/* class= et stroke-width= étaient ignorés par React : les styles
-                Tailwind ne s'appliquaient pas sur ce bouton. */}
-            <svg
-              className="stroke-current fill-none group-hover:rotate-90 duration-300"
-              viewBox="0 0 24 24"
-              height="30px"
-              width="30px"
-              xmlns="http://www.w3.org/2000/svg"
+        <div className="flex shrink-0 items-center gap-2">
+          {/* Commandes de défilement, masquées au clavier puisque les liens
+              de la rangée sont déjà atteignables par tabulation. */}
+          <div className="hidden items-center gap-1 md:flex">
+            <button
+              type="button"
+              onClick={() => scrollBy(-1)}
+              aria-label={`Faire défiler ${title} vers la gauche`}
+              className="grid h-9 w-9 place-items-center rounded-full bg-ink-850 text-ink-300 transition-colors duration-300 hover:bg-ink-800 hover:text-ink-050"
             >
-              <path
-                strokeWidth="1.5"
-                d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z"
-              />
-              <path strokeWidth="1.5" d="M8 12H16" />
-              <path strokeWidth="1.5" d="M12 16V8" />
-            </svg>
-          </Link>
-        )}
-      </div>
+              <ChevronLeft size={18} strokeWidth={2} />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollBy(1)}
+              aria-label={`Faire défiler ${title} vers la droite`}
+              className="grid h-9 w-9 place-items-center rounded-full bg-ink-850 text-ink-300 transition-colors duration-300 hover:bg-ink-800 hover:text-ink-050"
+            >
+              <ChevronRight size={18} strokeWidth={2} />
+            </button>
+          </div>
 
-      {items.length === 0 ? (
-        <p className="text-gray-400 px-4 py-6">Aucun titre à afficher.</p>
+          {section && (
+            <Link
+              to={`/browse/${section}`}
+              className="group inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold text-ink-300 transition-colors duration-300 hover:text-brand-400"
+            >
+              Voir tout
+              <ArrowRight
+                size={16}
+                strokeWidth={2}
+                className="transition-transform duration-300 ease-out-expo group-hover:translate-x-1"
+              />
+            </Link>
+          )}
+        </div>
+      </header>
+
+      {!mangaList ? (
+        <SkeletonRow />
+      ) : mangaList.length === 0 ? (
+        <p className="text-sm text-ink-400">Aucun titre à afficher.</p>
       ) : (
-        <ul className="Mangalist">
-          {items.map((manga) => (
-            <Manga key={manga.id} mangaData={manga} />
+        <ul
+          ref={railRef}
+          className="scrollbar-none -mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 pb-2"
+        >
+          {mangaList.map((manga) => (
+            <Manga
+              key={manga.id}
+              mangaData={manga}
+              headingLevel="h3"
+              className="w-[42vw] shrink-0 snap-start sm:w-[30vw] md:w-[22vw] lg:w-[15rem]"
+            />
           ))}
         </ul>
       )}
-    </div>
+    </section>
   );
 };
 
 DisplayList.propTypes = {
   title: PropTypes.string.isRequired,
-  // La liste est nulle pendant le chargement : la marquer `isRequired`
-  // déclenchait un avertissement PropTypes à chaque montage.
   mangaList: PropTypes.array,
   section: PropTypes.oneOf(["nouveaute", "explorer", "populaire"]),
+  description: PropTypes.string,
 };
 
 export default DisplayList;

@@ -1,65 +1,55 @@
-/* ImageSlider.css */
+/* Ajustements du carrousel tiers.
+ *
+ * Les classes de l'ancienne composition (carousel-overlay-preview,
+ * carousel-flag-preview, main-image) ont été retirées : le héros est
+ * désormais construit avec les utilitaires Tailwind dans ImageSlider.jsx.
+ * Ne subsistent ici que les surcharges de la feuille de la librairie. */
 
 .carousel .slide {
   background: none;
-  cursor: pointer;
 }
 
 .carousel .carousel-slider {
   overflow: hidden;
 }
 
-
-
-.carousel-flag-preview{
-  position: absolute;
-  bottom: 30%; /* Position à partir du haut de .carousel-item */
-  margin-left :30px ;
-  height: auto;
-  width: 32px;
+/* La librairie impose un fond blanc et un rayon de 50% sur les puces, seules
+ * valeurs hors du système de formes du projet. Elles sont réalignées sur les
+ * jetons du thème. */
+.carousel .control-dots {
+  margin: 0 0 1.25rem;
 }
 
-.carousel-overlay-preview {
-  position: absolute; /* Positionnement absolu */
-  margin: 10px;
-  top: 20px; /* Position à partir du haut de .carousel-item */
-  left: 20px; /* Position à partir du côté droit de .carousel-item */
-  width: auto; /* Largeur fixe pour la prévisualisation */
-  height: 30vh; /* Hauteur automatique pour conserver l'aspect ratio */
-  overflow: hidden; /* Cache tout débordement */
-  border-radius: 10px; /* Bord arrondi pour esthétique */
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Ombre portée pour un effet de profondeur */
+.carousel .control-dots .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-ink-300);
+  box-shadow: none;
+  opacity: 0.35;
+  transition: opacity 0.3s var(--ease-out-expo), width 0.3s var(--ease-out-expo);
 }
 
-.carousel .main-image  {
-  position:relative;
-  z-index: -1;
-  display:block;
-  width: 100%;
-  height: 50vh;
-  object-fit: cover;
-  object-position: center 25%;
+.carousel .control-dots .dot.selected {
+  width: 20px;
+  border-radius: var(--radius-full);
+  background: var(--color-brand-500);
+  opacity: 1;
 }
 
-.carousel-overlay-preview .preview-image {
-  width: 100%; /* Remplir le conteneur parent */
-  height: 100%; /* Ajustement automatique de la hauteur */
+/* Flèches : contraste renforcé sur les illustrations claires. */
+.carousel.carousel-slider .control-arrow {
+  opacity: 0.5;
+  padding: 1rem;
+  transition: opacity 0.3s var(--ease-out-expo);
 }
 
-.carousel-flag-preview .flag-image {
-  width: 100%; /* Remplir le conteneur parent */
-  height: 100%; /* Ajustement automatique de la hauteur */
+.carousel.carousel-slider .control-arrow:hover {
+  opacity: 1;
+  background: transparent;
 }
 
-
-.carousel .carousel-caption h3 {
-  margin-left: 40px;
-}
-  
-
-.carousel .carousel-caption p {
-  margin-bottom: 0;
-  font-size: 18px; /* Larger for better readability */
-  line-height: 1.4;
-  text-overflow: ellipsis; /* Adds an ellipsis if text overflows */
+.carousel .control-arrow:focus-visible {
+  outline: 2px solid var(--color-brand-400);
+  outline-offset: -4px;
 }

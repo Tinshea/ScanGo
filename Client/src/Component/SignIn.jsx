@@ -1,6 +1,7 @@
-import React, { useContext, useState } from "react";
+import { useContext, useState } from "react";
 import PropTypes from "prop-types";
 import { AuthContext } from "./AuthContext";
+import { fieldClass, labelClass, primaryButton } from "../styles/form";
 
 const SignIn = ({ handleSwitch }) => {
   const { signIn } = useContext(AuthContext);
@@ -13,55 +14,68 @@ const SignIn = ({ handleSwitch }) => {
     setIsSubmitting(true);
 
     const { username, password } = event.target.elements;
-    // Le résultat est désormais exploité : un mot de passe erroné laissait
-    // auparavant le formulaire totalement muet.
     const result = await signIn(username.value, password.value);
-    if (!result.ok) {
-      setError(result.error);
-    }
+    if (!result.ok) setError(result.error);
     setIsSubmitting(false);
   };
 
   return (
-    <div className="text-white">
-      <h2 className="text-2xl font-semibold text-center mb-4">Connexion</h2>
+    <div>
+      <h2 className="mb-5 text-xl text-ink-050">Connexion</h2>
 
-      <form onSubmit={handleSignIn} className="flex flex-col space-y-4">
+      <form onSubmit={handleSignIn} className="flex flex-col gap-4">
         {error && (
-          <p className="text-red-400 text-sm text-center" role="alert">
+          <p role="alert" className="text-sm text-brand-400">
             {error}
           </p>
         )}
 
-        <input
-          name="username"
-          type="text"
-          placeholder="Nom d'utilisateur"
-          autoComplete="username"
-          required
-          className="w-full px-4 py-2 bg-transparent border border-white rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
-        />
-        <input
-          name="password"
-          type="password"
-          placeholder="Mot de passe"
-          autoComplete="current-password"
-          required
-          className="w-full px-4 py-2 bg-transparent border border-white rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
-        />
+        <div>
+          {/* Les noms de champs (username, password) sont inchangés : la règle
+              11.F interdit de les renommer. */}
+          <label htmlFor="signin-username" className={labelClass}>
+            Nom d&apos;utilisateur
+          </label>
+          <input
+            id="signin-username"
+            name="username"
+            type="text"
+            autoComplete="username"
+            required
+            className={fieldClass}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="signin-password" className={labelClass}>
+            Mot de passe
+          </label>
+          <input
+            id="signin-password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            required
+            className={fieldClass}
+          />
+        </div>
 
         <button
           type="submit"
           disabled={isSubmitting}
-          className="bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`mt-1 ${primaryButton}`}
         >
           {isSubmitting ? "Connexion..." : "Se connecter"}
         </button>
       </form>
 
-      <p className="mt-4 text-center">
+      <p className="mt-5 text-center text-sm text-ink-400">
         Pas encore de compte ?{" "}
-        <button onClick={handleSwitch} className="text-blue-400 hover:underline">
+        <button
+          type="button"
+          onClick={handleSwitch}
+          className="font-semibold text-brand-400 hover:underline"
+        >
           Créer un compte
         </button>
       </p>

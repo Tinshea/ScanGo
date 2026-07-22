@@ -1,12 +1,12 @@
-import React, { useContext, useState } from "react";
+import { useContext, useState } from "react";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import { AuthContext } from "./AuthContext";
 import { Trash2 } from "lucide-react";
 import api, { messageFromError } from "../api";
-import { timeSince } from "../utils/date";
+import { timeSince, cleanText } from "../utils/date";
 
-// Liste des commentaires d'un profil, groupés par manga commenté.
+// Commentaires publiés par un utilisateur, sur sa page de profil.
 const CommentUser = ({ comments, setComments }) => {
   const { isAuthenticated, user } = useContext(AuthContext);
   const [deletingId, setDeletingId] = useState(null);
@@ -17,13 +17,9 @@ const CommentUser = ({ comments, setComments }) => {
     setError("");
     try {
       await api.delete("/user/chapter/comment", { params: { id: commentId } });
-
       if (setComments) {
         setComments((prev) => prev.filter((c) => c.id !== commentId));
       }
-      // La branche window.location.reload() a été retirée : recharger toute la
-      // page pour supprimer une ligne perdait la position de défilement et
-      // relançait l'ensemble des requêtes du profil.
     } catch (err) {
       setError(messageFromError(err, "Impossible de supprimer ce commentaire."));
     } finally {
@@ -32,53 +28,60 @@ const CommentUser = ({ comments, setComments }) => {
   };
 
   if (!Array.isArray(comments) || comments.length === 0) {
-    return <p className="text-gray-400 text-center">Aucun commentaire</p>;
+    return <p className="text-sm text-ink-500">Aucun commentaire.</p>;
   }
 
   return (
-    <div className="w-full space-y-4">
-      {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+    <div className="flex flex-col gap-3">
+      {error && <p className="text-sm text-brand-400">{error}</p>}
 
       {comments.map((comment) => {
         const isAuthor = isAuthenticated && user && comment.userId === user.id;
         const isDeleting = deletingId === comment.id;
 
         return (
-          <div
+          <article
             key={comment.id}
-            className="bg-gray-800 text-white p-4 rounded-lg shadow-md transition-all duration-300 hover:bg-gray-700 flex flex-col gap-2"
+            className="rounded-md bg-ink-900 p-4 ring-1 ring-white/5"
           >
-            <div className="flex justify-between items-center gap-4">
-              {/* Le titre du manga renvoie désormais vers le chapitre commenté :
-                  c'était auparavant un texte inerte. */}
+            <div className="flex items-center gap-3">
               {comment.chapterId ? (
                 <Link
                   to={`/chapter/${comment.chapterId}`}
-                  className="text-blue-400 font-bold hover:underline truncate"
+                  className="truncate text-sm font-bold text-brand-400 hover:underline"
                 >
                   {comment.manga || "Chapitre"}
                 </Link>
               ) : (
-                <strong className="text-blue-400 truncate">{comment.manga}</strong>
+                <span className="truncate text-sm font-bold text-ink-100">
+                  {comment.manga}
+                </span>
               )}
-              <p className="text-sm text-gray-400 italic shrink-0">
+
+              <time
+                dateTime={comment.createdAt}
+                className="ml-auto shrink-0 text-xs text-ink-500"
+              >
                 {timeSince(comment.createdAt)}
-              </p>
+              </time>
+
+              {isAuthor && (
+                <button
+                  type="button"
+                  onClick={() => handleDelete(comment.id)}
+                  disabled={isDeleting}
+                  aria-label="Supprimer mon commentaire"
+                  className="shrink-0 rounded-full p-1.5 text-ink-500 transition-colors duration-300 hover:bg-white/5 hover:text-brand-400 disabled:opacity-40"
+                >
+                  <Trash2 size={16} strokeWidth={2} />
+                </button>
+              )}
             </div>
 
-            <p className="text-gray-300 whitespace-pre-wrap break-words">{comment.text}</p>
-
-            {isAuthor && (
-              <button
-                onClick={() => handleDelete(comment.id)}
-                disabled={isDeleting}
-                aria-label="Supprimer le commentaire"
-                className="self-end text-red-500 hover:text-red-600 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Trash2 size={20} />
-              </button>
-            )}
-          </div>
+            <p className="mt-2.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink-300">
+              {cleanText(comment.text)}
+            </p>
+          </article>
         );
       })}
     </div>

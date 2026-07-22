@@ -1,58 +1,95 @@
-import React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react"; 
+import PropTypes from "prop-types";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
-const Pagination = ({ totalPages, currentPage, handlePageChange, handlePreviousPage, handleNextPage }) => {
-  
-  const pageNumbers = [];
-  for (let i = 1; i <= totalPages; i++) {
+/**
+ * Pagination du catalogue.
+ *
+ * Corrections : les ellipses étaient des <button disabled> annoncés comme tels
+ * aux lecteurs d'écran, la page courante n'était pas signalée autrement que
+ * par sa couleur, et les clés de liste reposaient sur l'index.
+ */
+const Pagination = ({
+  totalPages,
+  currentPage,
+  handlePageChange,
+  handlePreviousPage,
+  handleNextPage,
+}) => {
+  const items = [];
+  for (let i = 1; i <= totalPages; i += 1) {
     if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-      pageNumbers.push(i);
+      items.push(i);
     } else if (i === currentPage - 3 || i === currentPage + 3) {
-      pageNumbers.push("...");
+      items.push(`gap-${i}`);
     }
   }
 
+  const arrowClass =
+    "grid h-10 w-10 place-items-center rounded-full bg-ink-850 text-ink-300 ring-1 ring-white/10 transition-colors duration-300 hover:bg-ink-800 hover:text-ink-050 disabled:cursor-not-allowed disabled:opacity-40";
+
   return (
-    <div className="flex justify-center items-center gap-2 mt-6">
-      {/* ✅ Bouton précédent */}
+    <nav aria-label="Pagination" className="flex items-center gap-2">
       <button
+        type="button"
         onClick={handlePreviousPage}
         disabled={currentPage === 1}
-        className={`p-2 rounded-md border border-gray-500 transition-all duration-300 ${
-          currentPage === 1 ? "cursor-not-allowed opacity-50" : "hover:bg-gray-700"
-        }`}
+        aria-label="Page précédente"
+        className={arrowClass}
       >
-        <ChevronLeft size={20} />
+        <ChevronLeft size={18} strokeWidth={2} />
       </button>
 
-      {/* ✅ Numéros de page */}
-      {pageNumbers.map((number, index) => (
-        <button
-          key={index}
-          onClick={() => number !== "..." && handlePageChange(number)}
-          className={`px-3 py-1 rounded-md transition-all duration-300 ${
-            currentPage === number
-              ? "bg-blue-500 text-white font-semibold"
-              : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-          }`}
-          disabled={number === "..."}
-        >
-          {number}
-        </button>
-      ))}
+      <ul className="flex items-center gap-1">
+        {items.map((item) =>
+          typeof item === "number" ? (
+            <li key={item}>
+              <button
+                type="button"
+                onClick={() => handlePageChange(item)}
+                aria-current={currentPage === item ? "page" : undefined}
+                aria-label={`Page ${item}`}
+                className={`h-10 min-w-10 rounded-full px-3 text-sm font-semibold transition-colors duration-300 ${
+                  currentPage === item
+                    ? "bg-brand-500 text-white"
+                    : "bg-ink-850 text-ink-300 ring-1 ring-white/10 hover:bg-ink-800 hover:text-ink-050"
+                }`}
+              >
+                {item}
+              </button>
+            </li>
+          ) : (
+            // Séparateur purement visuel, retiré de l'ordre de tabulation et
+            // de l'arbre d'accessibilité.
+            <li
+              key={item}
+              aria-hidden="true"
+              className="px-1 text-sm text-ink-600 select-none"
+            >
+              ...
+            </li>
+          )
+        )}
+      </ul>
 
-      {/* ✅ Bouton suivant */}
       <button
+        type="button"
         onClick={handleNextPage}
         disabled={currentPage === totalPages}
-        className={`p-2 rounded-md border border-gray-500 transition-all duration-300 ${
-          currentPage === totalPages ? "cursor-not-allowed opacity-50" : "hover:bg-gray-700"
-        }`}
+        aria-label="Page suivante"
+        className={arrowClass}
       >
-        <ChevronRight size={20} />
+        <ChevronRight size={18} strokeWidth={2} />
       </button>
-    </div>
+    </nav>
   );
+};
+
+Pagination.propTypes = {
+  totalPages: PropTypes.number.isRequired,
+  currentPage: PropTypes.number.isRequired,
+  handlePageChange: PropTypes.func.isRequired,
+  handlePreviousPage: PropTypes.func.isRequired,
+  handleNextPage: PropTypes.func.isRequired,
 };
 
 export default Pagination;

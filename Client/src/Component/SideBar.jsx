@@ -1,85 +1,99 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Menu, X } from "lucide-react"; // Icônes pour le bouton hamburger
+import { useState } from "react";
+import PropTypes from "prop-types";
+import { Link } from "react-router-dom";
+import { Menu, X, ArrowLeft } from "lucide-react";
 
+/**
+ * Panneau de navigation du lecteur : retour à la fiche et liste des chapitres.
+ *
+ * Le bouton d'ouverture est réduit à une pastille discrète en haut à gauche
+ * pour ne pas empiéter sur la lecture.
+ */
 const Sidebar = ({ mangaDetails }) => {
-  let navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(false); // La sidebar est FERMÉE par défaut
-
+  const [isOpen, setIsOpen] = useState(false);
   const chapters = mangaDetails?.chapters ?? [];
-
-  const handleMangaClick = () => {
-    if (mangaDetails?.id) {
-      navigate(`/manga/${mangaDetails.id}`);
-    } else {
-      navigate("/");
-    }
-  };
 
   return (
     <>
-      {/* Bouton hamburger visible SEULEMENT si la sidebar est fermée */}
       {!isOpen && (
         <button
+          type="button"
           onClick={() => setIsOpen(true)}
-          className="fixed top-4 my-10 left-4 z-50 cursor-pointer bg-gray-800 text-white p-3 rounded-lg shadow-lg hover:bg-gray-700 transition duration-300"
+          aria-label="Ouvrir la liste des chapitres"
+          className="fixed left-4 top-20 z-40 grid h-10 w-10 place-items-center rounded-full bg-ink-900/90 text-ink-200 ring-1 ring-white/10 backdrop-blur transition-colors duration-300 hover:bg-ink-850 hover:text-ink-050"
         >
-          <Menu size={24} />
+          <Menu size={18} strokeWidth={2} />
         </button>
       )}
 
-      {/* Sidebar rétractable */}
+      {isOpen && (
+        <button
+          type="button"
+          aria-label="Fermer la liste des chapitres"
+          onClick={() => setIsOpen(false)}
+          className="fixed inset-0 z-40 bg-ink-950/60 backdrop-blur-sm"
+        />
+      )}
+
       <aside
-        className={`fixed top-0 left-0 h-screen bg-gray-900 text-white p-6 shadow-lg z-40 transition-transform duration-300 ease-in-out ${
-          isOpen ? "translate-x-0 w-64" : "-translate-x-full w-64"
+        className={`fixed left-0 top-0 z-50 flex h-dvh w-72 flex-col bg-ink-900 shadow-2xl ring-1 ring-white/10 transition-transform duration-300 ease-out-expo ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
+        aria-hidden={!isOpen}
       >
-        {/* Header de la sidebar */}
-        <div className="mt-10 flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between gap-2 border-b border-white/5 p-4">
+          {mangaDetails?.id ? (
+            <Link
+              to={`/manga/${mangaDetails.id}`}
+              className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5 text-sm font-semibold text-ink-200 transition-colors duration-300 hover:bg-white/10 hover:text-ink-050"
+            >
+              <ArrowLeft size={16} strokeWidth={2} />
+              Retour
+            </Link>
+          ) : (
+            <span />
+          )}
           <button
-            onClick={handleMangaClick}
-            className="bg-gray-700 cursor-pointer hover:bg-gray-600 text-white px-3 py-1 rounded-lg transition duration-300"
-          >
-            ⬅ Retour
-          </button>
-          {/* Bouton pour fermer la sidebar */}
-          <button
+            type="button"
             onClick={() => setIsOpen(false)}
-            className="text-white"
+            aria-label="Fermer"
+            className="grid h-8 w-8 place-items-center rounded-full text-ink-400 transition-colors duration-300 hover:text-ink-050"
           >
-            <X size={24} />
+            <X size={18} strokeWidth={2} />
           </button>
         </div>
 
-        {/* Le sélecteur de fournisseur a été retiré : il ne proposait qu'une
-            seule option et n'était relié à aucun comportement. */}
+        <nav className="flex-1 overflow-y-auto p-3">
+          <h2 className="mb-2 px-1 text-sm font-bold text-ink-050">Chapitres</h2>
 
-        {/* Liste des chapitres avec un scroll propre */}
-        <nav className="flex-1 overflow-y-auto max-h-[80vh]">
-          <h2 className="text-lg font-semibold mb-2">Chapitres</h2>
-          {/* mangaDetails.chapters était parcouru sans garde : arriver
-              directement sur l'URL d'un chapitre plantait le composant. */}
           {chapters.length === 0 ? (
-            <p className="text-gray-400 text-sm">Aucun chapitre disponible.</p>
+            <p className="px-1 text-sm text-ink-400">Aucun chapitre disponible.</p>
           ) : (
-            <ul className="space-y-2">
+            <ol className="flex flex-col gap-1">
               {chapters.map((chapter) => (
-                <li key={chapter.id} className="border-b border-gray-700 pb-2">
+                <li key={chapter.id}>
                   <Link
                     to={`/chapter/${chapter.id}`}
                     state={{ mangaDetails }}
-                    className="block p-3 rounded-md bg-gray-800 hover:bg-gray-700 transition duration-300 shadow-sm"
+                    onClick={() => setIsOpen(false)}
+                    className="block truncate rounded-sm px-3 py-2 text-sm text-ink-300 transition-colors duration-200 hover:bg-white/5 hover:text-ink-050"
                   >
-                    Chapitre {chapter.attributes?.chapter ?? "—"}
+                    {chapter.attributes?.chapter != null
+                      ? `Chapitre ${chapter.attributes.chapter}`
+                      : "Chapitre"}
                   </Link>
                 </li>
               ))}
-            </ul>
+            </ol>
           )}
         </nav>
       </aside>
     </>
   );
+};
+
+Sidebar.propTypes = {
+  mangaDetails: PropTypes.object,
 };
 
 export default Sidebar;

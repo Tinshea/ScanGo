@@ -1,55 +1,16 @@
-.navbar {
-  display: flex;
-  justify-content: space-between; /* Align items with space between */
-  align-items: center;
-  position: fixed;
-  top: 0;
-  height: 45px;
-  width: 100%;
-  padding: 10px 20px;
-  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-}
+/* La barre de navigation est désormais construite avec les utilitaires
+   Tailwind et les jetons du thème. Ce fichier ne conserve que le logo.
+
+   Retiré : une hauteur de barre de 45px contenant un logo de 90px, qui
+   débordait donc de son propre conteneur, ainsi que deux blocs @media
+   strictement identiques dupliqués à la suite. */
 
 .navbar-logo {
-  height: 90px; /* Changez à la taille de votre choix */
-  cursor: pointer;
-  margin-top: 20px; /* Ajoutez une marge en haut pour descendre le logo */
+  height: 2.5rem;
+  width: auto;
+  transition: opacity 0.3s var(--ease-out-expo);
 }
 
-/* Ajouter de l'espace sur les côtés des items */
-.navbar-item {
-  margin-left: 10px;
-  margin-right: 10px;
-}
-
-/* Responsive design pour les écrans plus petits */
-@media (max-width: 768px) {
-  .navbar {
-    padding: 5px 10px; /* Réduire le padding sur les petits écrans */
-  }
-
-  .navbar-logo {
-    height: 80px; /* Taille plus petite pour le logo sur les petits écrans */
-  }
-  
-  /* Ajouter d'autres ajustements pour les éléments de la navbar si nécessaire */
-}
-
-/* Effet de survol pour le logo */
 .navbar-logo:hover {
-  opacity: 0.8; /* Légère transparence au survol */
-}
-
-/* Responsive design pour les écrans plus petits */
-@media (max-width: 768px) {
-  .navbar {
-    padding: 5px 10px; /* Réduire le padding sur les petits écrans */
-  }
-
-  .navbar-logo {
-    height: 80px; /* Taille plus petite pour le logo sur les petits écrans */
-  }
-  
-  /* Ajouter d'autres ajustements pour les éléments de la navbar si nécessaire */
+  opacity: 0.85;
 }

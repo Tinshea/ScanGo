@@ -1,11 +1,44 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon"  href="/public/MangaGoLogo.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="/src/index.css" rel="stylesheet">
-    <title>MangaGo</title>
+
+    <!-- L'icône était référencée via /public/, chemin qui n'existe pas une
+         fois le site construit : Vite sert le contenu de public/ à la racine. -->
+    <link rel="icon" href="/MangaGoLogo.ico" />
+
+    <meta name="theme-color" content="#050816" />
+    <meta name="color-scheme" content="dark" />
+
+    <!-- Titre de repli, avant que React ne prenne la main. Les balises
+         description, canonical et Open Graph sont volontairement absentes
+         d'ici : posées en dur, elles précédaient dans le DOM celles générées
+         par route, et les moteurs retenaient la première occurrence. Le
+         composant Seo en est désormais l'unique source. -->
+    <title>MangaGo, lecteur de mangas en ligne</title>
+
+    <!-- Préconnexions vers les hôtes d'images, qui servent chaque couverture. -->
+    <link rel="preconnect" href="https://uploads.mangadex.org" />
+    <link rel="dns-prefetch" href="https://uploads.mangadex.org" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "MangaGo",
+        "url": "https://scan-go-lake.vercel.app/",
+        "inLanguage": "fr-FR",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "https://scan-go-lake.vercel.app/search/{search_term_string}"
+          },
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

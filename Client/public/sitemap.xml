@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Plan du site statique : il couvre les pages fixes du catalogue.
+  Les fiches de titres et les chapitres sont générés à la demande depuis
+  l'API MangaDex ; les référencer exigerait une génération côté serveur.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://scan-go-lake.vercel.app/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://scan-go-lake.vercel.app/browse/nouveaute</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://scan-go-lake.vercel.app/browse/explorer</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://scan-go-lake.vercel.app/browse/populaire</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>

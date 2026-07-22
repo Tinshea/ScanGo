@@ -1,22 +1,20 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import Manga from "./Manga";
 import { SkeletonGrid } from "./Skeleton";
 import Pagination from "./Pagination";
+import Seo from "./Seo";
 import api, { messageFromError } from "../api";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 24;
 
 const ShowTag = () => {
-  const [offset, setOffset] = useState(0);
   const { query } = useParams();
+  const [offset, setOffset] = useState(0);
   const [mangaList, setMangaList] = useState(null);
   const [total, setTotal] = useState(0);
   const [error, setError] = useState("");
-  const navigate = useNavigate();
 
-  // Le genre change : retour à la première page, sinon on restait sur un
-  // offset hérité de la consultation précédente.
   useEffect(() => {
     setOffset(0);
   }, [query]);
@@ -27,9 +25,6 @@ const ShowTag = () => {
     const fetchData = async () => {
       setError("");
       try {
-        // L'URL était codée en dur sur http://localhost:8080, ce qui rendait
-        // les pages de genre inutilisables en production ; et le paramètre
-        // « tag » au singulier était ignoré par l'API.
         const resp = await api.get("/Home", {
           params: { tags: query, offset, limit: PAGE_SIZE },
         });
@@ -50,53 +45,66 @@ const ShowTag = () => {
     };
   }, [offset, query]);
 
-  // Le nom du genre reste affiché pendant le chargement.
   const isLoading = !mangaList && !error;
-
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
 
-  return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
-      <div className="flex flex-col items-center mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-blue-400">
-          Genre : <span className="text-white">{query}</span>
-        </h1>
-        {total > 0 && (
-          <p className="text-gray-400 mt-2 text-sm">{total} titre(s) trouvé(s)</p>
-        )}
-      </div>
+  const changePage = (nextOffset) => {
+    setOffset(nextOffset);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
-      {error && <p className="text-red-400 text-center mb-6">{error}</p>}
+  return (
+    <div className="container-page py-10 md:py-14">
+      {/* Les pages de genre sont indexables : leur contenu est stable et
+          constitue une porte d'entrée légitime sur le catalogue. */}
+      <Seo
+        title={`Mangas ${query}`}
+        path={`/tag/${encodeURIComponent(query)}`}
+        description={`Tous les mangas du genre ${query} à lire en ligne sur MangaGo.`}
+      />
+
+      <header className="mb-8 border-b border-white/5 pb-6">
+        <h1 className="text-3xl text-ink-050 md:text-4xl">Mangas {query}</h1>
+        <p className="mt-2 text-sm text-ink-400">
+          {total > 0
+            ? `${total.toLocaleString("fr-FR")} titres dans ce genre`
+            : "Aucun titre dans ce genre"}
+        </p>
+      </header>
+
+      {error && <p className="mb-6 text-brand-400">{error}</p>}
+
+      <h2 className="sr-only-focusable">Titres du genre</h2>
 
       {isLoading ? (
         <SkeletonGrid count={PAGE_SIZE} />
-      ) : !error && mangaList.length === 0 ? (
-        <div className="text-center text-gray-400">
-          <p>Aucun titre dans ce genre.</p>
-          <button
-            onClick={() => navigate("/")}
-            className="mt-4 px-6 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg font-semibold transition"
+      ) : mangaList.length === 0 ? (
+        <div className="py-12 text-center">
+          <p className="text-ink-400">Aucun titre dans ce genre.</p>
+          <Link
+            to="/"
+            className="mt-4 inline-block rounded-full bg-brand-500 px-6 py-3 text-sm font-bold whitespace-nowrap text-white transition-colors duration-300 hover:bg-brand-600"
           >
             Retour à l&apos;accueil
-          </button>
+          </Link>
         </div>
       ) : (
-        <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {mangaList?.map((manga) => (
-            <Manga key={manga.id} mangaData={manga} />
+        <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          {mangaList.map((manga) => (
+            <Manga key={manga.id} mangaData={manga} headingLevel="h3" />
           ))}
         </ul>
       )}
 
-      {totalPages > 1 && (
-        <div className="mt-10 flex justify-center">
+      {totalPages > 1 && !isLoading && (
+        <div className="mt-12 flex justify-center">
           <Pagination
             totalPages={totalPages}
             currentPage={currentPage}
-            handlePageChange={(page) => setOffset((page - 1) * PAGE_SIZE)}
-            handlePreviousPage={() => setOffset((o) => Math.max(0, o - PAGE_SIZE))}
-            handleNextPage={() => setOffset((o) => o + PAGE_SIZE)}
+            handlePageChange={(page) => changePage((page - 1) * PAGE_SIZE)}
+            handlePreviousPage={() => changePage(Math.max(0, offset - PAGE_SIZE))}
+            handleNextPage={() => changePage(offset + PAGE_SIZE)}
           />
         </div>
       )}

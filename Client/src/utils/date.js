@@ -36,3 +36,24 @@ export const timeSince = (publishDate, locale = "fr-FR") => {
 };
 
 export default timeSince;
+
+/**
+ * Remplace les tirets cadratins et demi-cadratins par un tiret simple.
+ *
+ * Les titres et résumés proviennent de MangaDex et en contiennent
+ * régulièrement (« Konoha Shinden—Yukemuri Ninpouchou », « Naoto Hachiouji
+ * —our spineless— MC »). La charte de design bannit ces caractères sur toute
+ * surface visible, y compris dans du contenu tiers, donc ils sont normalisés
+ * au moment de l'affichage plutôt que laissés tels quels.
+ *
+ * @param {string} value
+ * @returns {string}
+ */
+export const cleanText = (value) => {
+  if (typeof value !== "string") return value;
+  return value
+    .replace(/\s*—\s*/g, " - ")
+    .replace(/\s*–\s*/g, " - ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+};

@@ -1,29 +1,33 @@
-import React, { useState, useEffect, useContext } from "react";
-import { motion } from "framer-motion";
+import { useState, useContext, useRef, useEffect } from "react";
+import PropTypes from "prop-types";
 import { Search, X } from "lucide-react";
 import DefaultPicture from "../Assets/Disconnected.png";
 import { AuthContext } from "./AuthContext";
 import { useNavigate } from "react-router-dom";
-import '../Css/SearchBarWithSpeakers.css';
 
+/**
+ * Recherche et accès au compte, dans l'en-tête.
+ *
+ * L'animation framer-motion pilotant la largeur du champ a été retirée : elle
+ * laissait un champ de saisie focusable dans un conteneur de largeur nulle
+ * lorsqu'il était replié, donc atteignable au clavier mais invisible.
+ */
 const Icone = ({ SidePanelfunc }) => {
-  const [profilePicture, setProfilePicture] = useState("");
   const { isAuthenticated, user } = useContext(AuthContext);
   const [searchValue, setSearchValue] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  let navigate = useNavigate();
+  const inputRef = useRef(null);
+  const navigate = useNavigate();
 
+  const profilePicture =
+    isAuthenticated && user?.profile_picture ? user.profile_picture : DefaultPicture;
+
+  // Le champ reçoit le focus à l'ouverture, ce qui évite un second clic.
   useEffect(() => {
-    if (isAuthenticated && user?.profile_picture != null) {
-      setProfilePicture(user?.profile_picture);
-    } else {
-      setProfilePicture(DefaultPicture);
-    }
-  }, [isAuthenticated, user]);
+    if (isSearchOpen) inputRef.current?.focus();
+  }, [isSearchOpen]);
 
   const handleSearch = () => {
-    // Une recherche vide menait vers /search/ — une URL sans résultat ni
-    // message. Le champ est désormais requis avant navigation.
     const term = searchValue.trim();
     if (!term) return;
     navigate(`/search/${encodeURIComponent(term)}`);
@@ -31,60 +35,66 @@ const Icone = ({ SidePanelfunc }) => {
     setIsSearchOpen(false);
   };
 
-  const handleChange = (event) => {
-    setSearchValue(event.target.value);
-  };
-
-  const toggleSearch = () => {
-    setIsSearchOpen(!isSearchOpen);
-  };
-
   return (
-    <div className="flex items-center justify-end gap-4 px-4  w-full max-w-lg mx-auto">
-      <motion.div
-        initial={{ opacity: 0, scaleX: 0 }}
-        animate={isSearchOpen ? { opacity: 1, scaleX: 1 } : { opacity: 0, scaleX: 0 }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
-        className={`origin-right flex items-center bg-white rounded-4xl shadow-md px-4 py-1 focus-within:ring-2 focus-within:ring-gray-500 transition ${
-          isSearchOpen ? "w-64" : "w-0 overflow-hidden"
-        }`}
-      >
-        <input
-          type="text"
-          className="w-full bg-transparent text-black placeholder-gray-800 outline-none text-sm px-2 py-1"
-          placeholder="Rechercher..."
-          value={searchValue}
-          onChange={handleChange}
-          // onKeyPress est déprécié depuis React 17 ; la valeur est par
-          // ailleurs pilotée par l'état plutôt que mutée sur l'événement.
-          onKeyDown={(event) => {
-            if (event.key === "Enter") handleSearch();
-          }}
-        />
+    <div className="flex items-center justify-end gap-2">
+      {isSearchOpen && (
+        <div className="flex items-center gap-1 rounded-full bg-ink-850 pl-4 pr-1 ring-1 ring-white/10 focus-within:ring-brand-400">
+          <label htmlFor="recherche-titre" className="sr-only-focusable">
+            Rechercher un manga
+          </label>
+          <input
+            id="recherche-titre"
+            ref={inputRef}
+            type="search"
+            className="w-40 bg-transparent py-2 text-sm text-ink-100 outline-none placeholder:text-ink-400 sm:w-56"
+            placeholder="Rechercher un titre"
+            value={searchValue}
+            onChange={(event) => setSearchValue(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") handleSearch();
+              if (event.key === "Escape") setIsSearchOpen(false);
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => setIsSearchOpen(false)}
+            aria-label="Fermer la recherche"
+            className="grid h-8 w-8 place-items-center rounded-full text-ink-400 transition-colors duration-300 hover:text-ink-050"
+          >
+            <X size={16} strokeWidth={2} />
+          </button>
+        </div>
+      )}
 
+      {!isSearchOpen && (
         <button
-          onClick={toggleSearch}
-          className="ml-2 text-white hover:text-gray-300"
+          type="button"
+          onClick={() => setIsSearchOpen(true)}
+          aria-label="Ouvrir la recherche"
+          className="grid h-10 w-10 place-items-center rounded-full text-ink-300 transition-colors duration-300 hover:bg-ink-850 hover:text-ink-050"
         >
-          <X className="w-5 h-5" />
+          <Search size={20} strokeWidth={2} />
         </button>
-      </motion.div>
+      )}
 
       <button
-        onClick={toggleSearch}
-        className=" text-white p-2 rounded-full cursor-pointer transition"
-      >
-        <Search className="w-6 h-6" />
-      </button>
-
-      <img
-        src={profilePicture}
-        alt="Profile Picture"
-        className="w-12 h-12 rounded-full border-2 border-gray-500 transition-transform duration-200 hover:scale-110 cursor-pointer shadow-lg animate-pulse"
+        type="button"
         onClick={SidePanelfunc}
-      />
+        aria-label={isAuthenticated ? "Ouvrir mon compte" : "Se connecter"}
+        className="shrink-0 rounded-full transition-transform duration-300 ease-out-expo hover:scale-105"
+      >
+        <img
+          src={profilePicture}
+          alt=""
+          className="h-10 w-10 rounded-full object-cover ring-2 ring-white/10"
+        />
+      </button>
     </div>
   );
+};
+
+Icone.propTypes = {
+  SidePanelfunc: PropTypes.func.isRequired,
 };
 
 export default Icone;

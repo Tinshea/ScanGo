@@ -1,86 +1,112 @@
-import { Carousel } from 'react-responsive-carousel';
-import { useNavigate } from 'react-router-dom';
-import '../Css/ImageSlider.css';
+import { Carousel } from "react-responsive-carousel";
+import { Link } from "react-router-dom";
+import { BookOpen } from "lucide-react";
+import PropTypes from "prop-types";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
-import { SkeletonBanner } from './Skeleton';
+import "../Css/ImageSlider.css";
+import { SkeletonBanner } from "./Skeleton";
+import usePrefersReducedMotion from "../hooks/usePrefersReducedMotion";
+import { cleanText } from "../utils/date";
 
-const MAX_DESCRIPTION_LENGTH = 200; // Nombre max de caractères avant de tronquer
+// Le résumé était tronqué à 200 caractères, ce qui produisait jusqu'à six
+// lignes dans le héros. Le Pre-Flight impose un sous-texte de 20 mots et 4
+// lignes au maximum.
+const MAX_WORDS = 20;
 
+const shorten = (text) => {
+  if (!text) return "";
+  const cleaned = cleanText(text);
+  const words = cleaned.split(/\s+/);
+  if (words.length <= MAX_WORDS) return cleaned;
+  return `${words.slice(0, MAX_WORDS).join(" ")}...`;
+};
+
+/**
+ * Héros du catalogue.
+ *
+ * Le carrousel reste la signature identifiée à l'audit : image pleine largeur,
+ * dégradé vers le fond, vignette de couverture superposée. La recomposition
+ * porte sur la discipline du héros, pas sur le principe.
+ *
+ * Corrections : titre limité à deux lignes, résumé plafonné à vingt mots,
+ * appel à l'action désormais présent, pastilles de genre superposées retirées,
+ * défilement automatique ralenti et coupé si l'utilisateur demande une
+ * réduction des animations.
+ */
 const ImageSlider = ({ mangaList }) => {
-  let navigate = useNavigate();
+  const prefersReducedMotion = usePrefersReducedMotion();
 
-  // Bloc de la hauteur exacte du carrousel : la bannière ne surgit plus en
-  // repoussant tout le contenu situé en dessous.
-  if (!mangaList) {
-    return <SkeletonBanner />;
-  }
-
-  const handleMangaClick = (id) => {
-    navigate(`/manga/${id}`);
-  };
+  if (!mangaList) return <SkeletonBanner />;
+  if (mangaList.length === 0) return null;
 
   return (
-    <Carousel
-      showArrows={true}
-      autoPlay={true}
-      interval={3000}
-      infiniteLoop={true}
-      showThumbs={false}
-      showStatus={false}
-      stopOnHover={true}
-      swipeable={true}
-      dynamicHeight={false}
-    >
-      {mangaList.map((slide, index) => {
-        const description = slide.description?.en || "No description available";
-        const isLongDescription = description.length > MAX_DESCRIPTION_LENGTH;
-        const shortDescription = isLongDescription
-          ? `${description.substring(0, MAX_DESCRIPTION_LENGTH)}...`
-          : description;
+    <section aria-label="Titres à la une" className="relative">
+      <Carousel
+        showArrows
+        showThumbs={false}
+        showStatus={false}
+        showIndicators
+        infiniteLoop
+        swipeable
+        stopOnHover
+        dynamicHeight={false}
+        // Coupé net si la préférence système le demande, et ralenti de 3 à 7
+        // secondes : trois secondes ne laissaient pas le temps de lire.
+        autoPlay={!prefersReducedMotion}
+        interval={7000}
+        transitionTime={prefersReducedMotion ? 0 : 600}
+      >
+        {mangaList.map((slide) => (
+          <article key={slide.id} className="relative text-left">
+            <div className="relative h-[62vh] min-h-[26rem] w-full overflow-hidden">
+              <img
+                referrerPolicy="no-referrer"
+                src={slide.image}
+                alt={cleanText(slide.title)}
+                decoding="async"
+                className="h-full w-full object-cover object-[center_25%]"
+              />
+              {/* Deux dégradés superposés : l'un vers le bas pour raccorder au
+                  fond de page, l'autre vers la droite pour garantir le
+                  contraste du texte quelle que soit l'illustration. */}
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/70 to-transparent"
+              />
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 bg-gradient-to-r from-ink-950/90 via-ink-950/30 to-transparent"
+              />
+            </div>
 
-        return (
-          <div key={index} onClick={() => handleMangaClick(slide.id)} className="carousel-item">
-            <div className="inline-block w-full bg-gradient-to-b from-transparent to-[#050816]">
-              <img referrerPolicy="no-referrer" src={slide.image} alt={`Slide ${index + 1}`} className="main-image" />
-            </div>
-            <div className="carousel-overlay-preview">
-              <img referrerPolicy="no-referrer" src={slide.image} alt={`Slide ${index + 1}`} className="preview-image" />
-            </div>
-            <div className="carousel-flag-preview">
-              <img referrerPolicy="no-referrer" src={slide.flag} alt={`Slide ${index + 1}`} className="flag-image" />
-            </div>
-            <div className="flex sm:flex-col absolute bottom-[5%] left-1/2 -translate-x-1/2 w-full h-[14vh] p-2 md:p-4 text-white text-left text-base box-border overflow-hidden ml-[10px]">
-              <h3 className="font-extrabold text-rose-600">{slide.title}</h3>
-              <p className='hidden sm:block'>
-                {shortDescription}
-                {isLongDescription && (
-                  <span
-                    className="font-bold cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation(); // Empêche le clic de déclencher handleMangaClick
-                      handleMangaClick(slide.id);
-                    }}
-                  >
-                    Voir la suite
-                  </span>
-                )}
-              </p>
-              <div className="sm:flex hidden flex-wrap">
-                {(slide.genre || []).map((genre, index) => (
-                  <p
-                    key={`genre-${index}`}
-                    className="items-center flex justify-center bg-[#050816] text-white  text-xs px-2 py-1 rounded-full mr-2 mb-2"
-                  >
-                    {genre}
-                  </p>
-                ))}
+            <div className="container-page absolute inset-x-0 bottom-0 pb-14 md:pb-20">
+              <div className="flex max-w-2xl flex-col items-start gap-4">
+                <h2 className="line-clamp-2 text-3xl text-ink-050 md:text-4xl">
+                  {cleanText(slide.title)}
+                </h2>
+
+                <p className="line-clamp-3 max-w-[65ch] text-sm text-ink-300 md:text-base">
+                  {shorten(slide.description?.en)}
+                </p>
+
+                <Link
+                  to={`/manga/${slide.id}`}
+                  className="inline-flex items-center gap-2 rounded-full bg-brand-500 px-6 py-3 text-sm font-bold whitespace-nowrap text-white transition-colors duration-300 hover:bg-brand-600"
+                >
+                  <BookOpen size={18} strokeWidth={2} />
+                  Découvrir ce titre
+                </Link>
               </div>
             </div>
-          </div>
-        );
-      })}
-    </Carousel>
+          </article>
+        ))}
+      </Carousel>
+    </section>
   );
+};
+
+ImageSlider.propTypes = {
+  mangaList: PropTypes.array,
 };
 
 export default ImageSlider;

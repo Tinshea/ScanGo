@@ -1,11 +1,27 @@
-import React, { useState, useEffect, useContext, useRef, useCallback } from "react";
+import { useState, useEffect, useContext, useRef, useCallback } from "react";
+import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ZoomIn,
+  ZoomOut,
+  ArrowLeftRight,
+  MessageSquare,
+} from "lucide-react";
 import LoadingComponent from "./LoadingComponent";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "./SideBar";
 import { AuthContext } from "./AuthContext";
 import Comment from "./Comment";
+import Seo from "./Seo";
 import api, { messageFromError } from "../api";
 
+/**
+ * Lecteur de chapitre.
+ *
+ * Surface de lecture longue : la barre d'outils est ramenée à un bandeau
+ * discret en bas d'écran plutôt qu'à trois rangées de boutons colorés au
+ * milieu du flux de pages. Les pages s'enchaînent sans interruption visuelle.
+ */
 const ChapterReader = () => {
   const [pages, setPages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,11 +33,7 @@ const ChapterReader = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Les détails du manga arrivent normalement par l'état de navigation. En
-  // accès direct à l'URL ils sont absents : ils sont alors récupérés via le
-  // mangaId renvoyé par l'API, sans quoi la barre latérale plantait.
   const [mangaDetails, setMangaDetails] = useState(location.state?.mangaDetails || null);
-
   const [comments, setComments] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [commentError, setCommentError] = useState("");
@@ -41,7 +53,6 @@ const ChapterReader = () => {
         if (cancelled) return;
         setPages(chapter.data.map((file) => `${baseUrl}/data/${chapter.hash}/${file}`));
 
-        // Récupération du manga uniquement si l'état de navigation est absent.
         if (!location.state?.mangaDetails && mangaId) {
           try {
             const mangaRes = await api.get("/Manga", { params: { id: mangaId } });
@@ -52,8 +63,6 @@ const ChapterReader = () => {
         }
 
         if (isAuthenticated && mangaId) {
-          // L'identifiant utilisateur n'est plus envoyé : le serveur le déduit
-          // du jeton. L'historique est accessoire et ne bloque pas la lecture.
           api.post("/user/chapter/", { mangaId, chapterId }).catch(() => {});
         }
       } catch (error) {
@@ -71,10 +80,6 @@ const ChapterReader = () => {
     };
   }, [chapterId, isAuthenticated, location.state?.mangaDetails]);
 
-  // Chargement des commentaires du chapitre.
-  //
-  // Cet appel n'existait pas : la section restait vide en permanence et
-  // n'affichait que les commentaires postés durant la session en cours.
   useEffect(() => {
     let cancelled = false;
 
@@ -111,8 +116,6 @@ const ChapterReader = () => {
           manga: mangaDetails?.title || "",
           text,
         });
-        // Le serveur répond 201 à la création : ne tester que 200 laissait le
-        // commentaire invisible jusqu'au rechargement de la page.
         setComments((prev) => [response.data, ...prev]);
         setShowForm(false);
         commentInputRef.current.value = "";
@@ -129,20 +132,18 @@ const ChapterReader = () => {
 
   if (loadError) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-6 text-center">
-        <p className="text-xl font-semibold">{loadError}</p>
-        <button
-          onClick={() => navigate("/")}
-          className="mt-6 px-6 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg font-semibold transition"
+      <div className="container-page flex min-h-[60vh] flex-col items-center justify-center gap-6 text-center">
+        <p className="text-lg text-ink-200">{loadError}</p>
+        <Link
+          to="/"
+          className="rounded-full bg-brand-500 px-6 py-3 text-sm font-bold whitespace-nowrap text-white transition-colors duration-300 hover:bg-brand-600"
         >
           Retour à l&apos;accueil
-        </button>
+        </Link>
       </div>
     );
   }
 
-  // Tri croissant pour la navigation, en écartant les chapitres sans numéro
-  // (one-shots) plutôt que de les placer arbitrairement en tête.
   const sortedChapters = [...(mangaDetails?.chapters || [])]
     .filter((c) => c.attributes?.chapter != null)
     .sort((a, b) => Number(a.attributes.chapter) - Number(b.attributes.chapter));
@@ -154,115 +155,170 @@ const ChapterReader = () => {
       ? sortedChapters[chapterIndex + 1]
       : null;
 
+  const current = sortedChapters[chapterIndex];
+  const chapterLabel = current?.attributes?.chapter
+    ? `Chapitre ${current.attributes.chapter}`
+    : "Chapitre";
+
   const goToChapter = (chapter) => {
     navigate(`/chapter/${chapter.id}`, { state: { mangaDetails } });
     window.scrollTo({ top: 0 });
   };
 
+  const toolButton =
+    "inline-flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-sm font-semibold text-ink-200 ring-1 ring-white/10 transition-colors duration-300 hover:bg-white/10 hover:text-ink-050 disabled:opacity-40";
+
   return (
-    <div className="flex flex-col items-center w-full min-h-screen bg-gray-900 text-white p-4">
+    <div className="flex w-full flex-col items-center">
+      <Seo
+        title={
+          mangaDetails?.title ? `${mangaDetails.title}, ${chapterLabel}` : chapterLabel
+        }
+        path={`/chapter/${chapterId}`}
+        description={
+          mangaDetails?.title
+            ? `Lisez ${chapterLabel} de ${mangaDetails.title} en ligne sur MangaGo.`
+            : "Lecture de chapitre sur MangaGo."
+        }
+        noindex
+      />
+
       {mangaDetails && <Sidebar mangaDetails={mangaDetails} />}
 
-      <div className="flex flex-col items-center w-full max-w-4xl mx-auto">
-        <div className={`flex flex-col items-center ${readingDirection}`}>
-          {pages.map((pageUrl, index) => (
-            <img
-              key={pageUrl}
-              src={pageUrl}
-              alt={`Page ${index + 1}`}
-              referrerPolicy="no-referrer"
-              // Les deux premières pages sont chargées immédiatement, les
-              // suivantes à l'approche du viewport : un chapitre de 60 pages
-              // ne déclenche plus 60 téléchargements simultanés.
-              loading={index < 2 ? "eager" : "lazy"}
-              decoding="async"
-              style={{ transform: `scale(${scale})` }}
-              className="max-w-full h-auto shadow-lg rounded-lg mb-6 transition-transform duration-300"
-            />
-          ))}
-        </div>
+      {/* Titre de page. Il est retiré du flux visuel pour ne pas rompre
+          l'immersion, mais reste présent pour la structure du document. */}
+      <h1 className="sr-only-focusable">
+        {mangaDetails?.title
+          ? `${mangaDetails.title}, ${chapterLabel}`
+          : chapterLabel}
+      </h1>
 
-        <div className="flex gap-4 mt-4">
+      {/* Pages. Fond neutre et aucun espacement entre les planches : la
+          lecture reste continue. */}
+      <div className="flex w-full max-w-4xl flex-col items-center">
+        {pages.map((pageUrl, index) => (
+          <img
+            key={pageUrl}
+            src={pageUrl}
+            alt={`Page ${index + 1}`}
+            referrerPolicy="no-referrer"
+            loading={index < 2 ? "eager" : "lazy"}
+            decoding="async"
+            style={{ transform: `scale(${scale})`, transformOrigin: "top center" }}
+            className="w-full transition-transform duration-300 ease-out-expo"
+          />
+        ))}
+      </div>
+
+      <div className="container-page py-10">
+        <nav
+          aria-label="Navigation entre chapitres"
+          className="flex flex-wrap items-center justify-center gap-3"
+        >
           {previousChapter && (
             <button
+              type="button"
               onClick={() => goToChapter(previousChapter)}
-              className="px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white font-semibold rounded-lg transition duration-300"
+              className={toolButton}
             >
-              ⬅ Chapitre précédent
+              <ArrowLeft size={16} strokeWidth={2} />
+              Chapitre précédent
             </button>
           )}
           {nextChapter && (
             <button
+              type="button"
               onClick={() => goToChapter(nextChapter)}
-              className="px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white font-semibold rounded-lg transition duration-300"
+              className="inline-flex items-center gap-2 rounded-full bg-brand-500 px-5 py-2 text-sm font-bold whitespace-nowrap text-white transition-colors duration-300 hover:bg-brand-600"
             >
-              Chapitre suivant ➡
+              Chapitre suivant
+              <ArrowRight size={16} strokeWidth={2} />
             </button>
           )}
-        </div>
+        </nav>
 
-        <div className="flex gap-4 mt-4">
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
           <button
+            type="button"
             onClick={() => setScale((s) => Math.min(s + 0.1, 3))}
-            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition duration-300"
+            className={toolButton}
+            aria-label="Agrandir les pages"
           >
-            Zoom +
+            <ZoomIn size={16} strokeWidth={2} />
           </button>
           <button
+            type="button"
             onClick={() => setScale((s) => Math.max(s - 0.1, 1))}
-            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition duration-300"
+            className={toolButton}
+            disabled={scale <= 1}
+            aria-label="Réduire les pages"
           >
-            Zoom -
+            <ZoomOut size={16} strokeWidth={2} />
           </button>
           <button
+            type="button"
             onClick={() => setReadingDirection((d) => (d === "ltr" ? "rtl" : "ltr"))}
-            className="px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white font-semibold rounded-lg transition duration-300"
+            className={toolButton}
           >
-            {readingDirection === "ltr" ? "Mode RTL" : "Mode LTR"}
+            <ArrowLeftRight size={16} strokeWidth={2} />
+            {readingDirection === "ltr" ? "Sens japonais" : "Sens occidental"}
           </button>
-        </div>
-
-        <div className="w-full sm:w-3/4 max-w-3xl bg-gray-800 p-6 rounded-lg shadow-lg mt-10">
-          <h2 className="text-lg font-semibold mb-4">
-            Commentaires {comments.length > 0 && `(${comments.length})`}
-          </h2>
-
-          {isAuthenticated ? (
-            <button
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-300"
-              onClick={() => setShowForm((v) => !v)}
-            >
-              {showForm ? "Annuler" : "Nouveau commentaire"}
-            </button>
-          ) : (
-            <p className="text-gray-400 text-sm">
-              Connectez-vous pour publier un commentaire.
-            </p>
-          )}
-
-          {showForm && isAuthenticated && (
-            <form className="mt-4" onSubmit={requestPost}>
-              <textarea
-                ref={commentInputRef}
-                maxLength={2000}
-                rows={4}
-                className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
-                placeholder="Votre commentaire"
-              />
-              {commentError && <p className="mt-2 text-red-400 text-sm">{commentError}</p>}
-              <button
-                type="submit"
-                disabled={isPosting}
-                className="mt-2 w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isPosting ? "Publication..." : "Poster"}
-              </button>
-            </form>
-          )}
-
-          <Comment comments={comments} setComments={setComments} />
         </div>
       </div>
+
+      <section className="container-page w-full max-w-3xl pb-16">
+        <h2 className="mb-4 flex items-center gap-2 text-xl text-ink-050">
+          <MessageSquare size={18} strokeWidth={2} />
+          Commentaires
+          {comments.length > 0 && (
+            <span className="text-sm font-normal text-ink-500">
+              ({comments.length})
+            </span>
+          )}
+        </h2>
+
+        {isAuthenticated ? (
+          <button
+            type="button"
+            className={toolButton}
+            onClick={() => setShowForm((v) => !v)}
+          >
+            {showForm ? "Annuler" : "Écrire un commentaire"}
+          </button>
+        ) : (
+          <p className="text-sm text-ink-400">
+            Connectez-vous pour publier un commentaire.
+          </p>
+        )}
+
+        {showForm && isAuthenticated && (
+          <form className="mt-4" onSubmit={requestPost}>
+            <label htmlFor="nouveau-commentaire" className="sr-only-focusable">
+              Votre commentaire
+            </label>
+            <textarea
+              id="nouveau-commentaire"
+              ref={commentInputRef}
+              maxLength={2000}
+              rows={4}
+              className="w-full rounded-md bg-ink-900 p-3 text-sm text-ink-100 ring-1 ring-white/10 outline-none placeholder:text-ink-400 focus:ring-brand-400"
+              placeholder="Votre commentaire"
+            />
+            {commentError && (
+              <p className="mt-2 text-sm text-brand-400">{commentError}</p>
+            )}
+            <button
+              type="submit"
+              disabled={isPosting}
+              className="mt-3 w-full rounded-full bg-brand-500 px-6 py-3 text-sm font-bold whitespace-nowrap text-white transition-colors duration-300 hover:bg-brand-600 disabled:opacity-50"
+            >
+              {isPosting ? "Publication..." : "Publier"}
+            </button>
+          </form>
+        )}
+
+        <Comment comments={comments} setComments={setComments} />
+      </section>
     </div>
   );
 };

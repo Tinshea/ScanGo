@@ -12,3 +12,8 @@ Client/dist/
 
 # OS
 .DS_Store
+
+# Skills d'agent installés localement
+.agents/
+.claude/
+skills-lock.json

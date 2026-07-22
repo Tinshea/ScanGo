@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useParams, Link } from "react-router-dom";
+import { Pencil, User } from "lucide-react";
 import LoadingComponent from "./LoadingComponent";
-import DisplayList from "./DisplayList";
+import Manga from "./Manga";
 import DisplayMangaSeen from "./DisplayMangaSeen";
 import CommentUser from "./CommentUser";
+import Seo from "./Seo";
 import { AuthContext } from "./AuthContext";
 import api, { messageFromError } from "../api";
 
@@ -25,8 +27,6 @@ const ProfilePage = () => {
       setError("");
       setProfile(null);
       try {
-        // Les trois requêtes étaient enchaînées séquentiellement alors
-        // qu'elles sont indépendantes : leurs latences s'additionnaient.
         const [profileRes, commentsRes, detailsRes] = await Promise.all([
           api.get("/User", { params: { id } }),
           api.get("/user/info/comment", { params: { userId: id } }),
@@ -53,11 +53,11 @@ const ProfilePage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-6 text-center">
-        <p className="text-xl font-semibold">{error}</p>
+      <div className="container-page flex min-h-[60vh] flex-col items-center justify-center gap-6 text-center">
+        <p className="text-lg text-ink-200">{error}</p>
         <Link
           to="/"
-          className="mt-6 px-6 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg font-semibold transition"
+          className="rounded-full bg-brand-500 px-6 py-3 text-sm font-bold whitespace-nowrap text-white transition-colors duration-300 hover:bg-brand-600"
         >
           Retour à l&apos;accueil
         </Link>
@@ -65,65 +65,87 @@ const ProfilePage = () => {
     );
   }
 
-  if (!profile) {
-    return <LoadingComponent />;
-  }
+  if (!profile) return <LoadingComponent />;
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
-      <div className="relative w-full h-60">
-        <img
-          src={profile.banner}
-          alt=""
-          className="w-full h-full object-cover rounded-lg"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900"></div>
+    <>
+      {/* Les profils ne sont pas indexés : contenu personnel. */}
+      <Seo
+        title={`Profil de ${profile.username}`}
+        path={`/User/${id}`}
+        description={`Profil de ${profile.username} sur MangaGo.`}
+        noindex
+      />
+
+      <div className="relative">
+        <div className="h-48 w-full overflow-hidden md:h-60">
+          {profile.banner ? (
+            <img
+              src={profile.banner}
+              alt=""
+              aria-hidden="true"
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="h-full w-full bg-ink-900" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-ink-950" />
+        </div>
+
+        <div className="container-page relative -mt-14 flex flex-col items-center gap-3 md:-mt-16 md:flex-row md:items-end">
+          {profile.profile_picture ? (
+            <img
+              src={profile.profile_picture}
+              alt=""
+              className="h-28 w-28 shrink-0 rounded-full object-cover ring-4 ring-ink-950"
+            />
+          ) : (
+            <span className="grid h-28 w-28 shrink-0 place-items-center rounded-full bg-ink-850 text-ink-400 ring-4 ring-ink-950">
+              <User size={36} strokeWidth={1.5} />
+            </span>
+          )}
+
+          <div className="flex flex-1 flex-col items-center gap-2 pb-2 md:flex-row md:items-end md:justify-between">
+            <h1 className="text-2xl text-ink-050 md:text-3xl">{profile.username}</h1>
+
+            {isOwnProfile && (
+              <Link
+                to={`/EditProfil/${id}`}
+                className="inline-flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-sm font-semibold whitespace-nowrap text-ink-100 ring-1 ring-white/10 transition-colors duration-300 hover:bg-white/10"
+              >
+                <Pencil size={16} strokeWidth={2} />
+                Modifier mon profil
+              </Link>
+            )}
+          </div>
+        </div>
       </div>
 
-      <div className="relative flex flex-col items-center -mt-16">
-        <img
-          src={profile.profile_picture}
-          alt={`Photo de ${profile.username}`}
-          className="w-32 h-32 border-4 border-white rounded-full object-cover shadow-lg hover:scale-105 transition duration-300"
-        />
-        <h1 className="text-2xl font-bold mt-4">{profile.username}</h1>
+      <div className="container-page flex flex-col gap-12 py-12">
+        <section>
+          <h2 className="mb-4 text-xl text-ink-050">Titres suivis</h2>
+          {followManga?.length > 0 ? (
+            <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+              {followManga.map((manga) => (
+                <Manga key={manga.id} mangaData={manga} headingLevel="h3" />
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-ink-500">Aucun titre suivi.</p>
+          )}
+        </section>
 
-        {/* Le lien vers l'édition du profil n'existait nulle part dans
-            l'interface : la page /EditProfil n'était atteignable qu'en tapant
-            l'URL à la main. */}
-        {isOwnProfile && (
-          <Link
-            to={`/EditProfil/${id}`}
-            className="mt-3 px-5 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg font-semibold transition duration-300"
-          >
-            Éditer le profil
-          </Link>
-        )}
-      </div>
-
-      <div className="mt-8 p-4 bg-gray-800 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4">📌 Mangas suivis</h2>
-        {followManga?.length > 0 ? (
-          <DisplayList title="Suivis" mangaList={followManga} />
-        ) : (
-          <p className="text-gray-400">Aucun manga suivi pour le moment.</p>
-        )}
-      </div>
-
-      <div className="mt-8 p-4 bg-gray-800 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4">📖 Mangas lus</h2>
-        {mangaSeen?.length > 0 ? (
+        <section>
+          <h2 className="mb-4 text-xl text-ink-050">Historique de lecture</h2>
           <DisplayMangaSeen mangaSeenList={mangaSeen} />
-        ) : (
-          <p className="text-gray-400">Aucune lecture enregistrée.</p>
-        )}
-      </div>
+        </section>
 
-      <div className="mt-8 p-4 bg-gray-800 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4">💬 Commentaires</h2>
-        <CommentUser comments={userComments} setComments={setUserComments} />
+        <section>
+          <h2 className="mb-4 text-xl text-ink-050">Commentaires</h2>
+          <CommentUser comments={userComments} setComments={setUserComments} />
+        </section>
       </div>
-    </div>
+    </>
   );
 };
 

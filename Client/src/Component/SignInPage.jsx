@@ -1,27 +1,24 @@
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+import { useState } from "react";
 import SignIn from "./SignIn";
 import SignUp from "./SignUp";
 
+/**
+ * Bascule entre connexion et inscription dans le panneau latéral.
+ *
+ * L'animation framer-motion remontant le bloc à chaque bascule a été retirée :
+ * elle rejouait un mouvement complet pour un simple changement de formulaire.
+ */
 const SignInPage = () => {
   const [isSignIn, setIsSignIn] = useState(true);
-
-  const handleSwitch = () => {
-    setIsSignIn(!isSignIn);
-  };
+  const handleSwitch = () => setIsSignIn((value) => !value);
 
   return (
-    <div className="flex justify-center items-center h-full">
-      <motion.div
-        key={isSignIn ? "signIn" : "signUp"}
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 20 }}
-        transition={{ duration: 0.3 }}
-        className="bg-gray-900 p-8 rounded-lg shadow-lg w-96"
-      >
-        {isSignIn ? <SignIn handleSwitch={handleSwitch} /> : <SignUp handleSwitch={handleSwitch} />}
-      </motion.div>
+    <div className="pt-4">
+      {isSignIn ? (
+        <SignIn handleSwitch={handleSwitch} />
+      ) : (
+        <SignUp handleSwitch={handleSwitch} />
+      )}
     </div>
   );
 };

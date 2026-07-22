@@ -1,9 +1,9 @@
-import React, { useState, useContext } from "react";
+import { useState, useContext } from "react";
 import PropTypes from "prop-types";
 import { AuthContext } from "./AuthContext";
-import { Trash2 } from "lucide-react";
+import { Trash2, User } from "lucide-react";
 import api, { messageFromError } from "../api";
-import { timeSince } from "../utils/date";
+import { timeSince, cleanText } from "../utils/date";
 
 const Comment = ({ comments, setComments }) => {
   const { isAuthenticated, user } = useContext(AuthContext);
@@ -14,70 +14,78 @@ const Comment = ({ comments, setComments }) => {
     setDeletingId(commentId);
     setError("");
     try {
-      // userId n'est plus transmis : le serveur identifie l'auteur via le
-      // jeton et refuse la suppression du commentaire d'autrui.
       await api.delete("/user/chapter/comment", { params: { id: commentId } });
       setComments((prev) => prev.filter((c) => c.id !== commentId));
     } catch (err) {
       setError(messageFromError(err, "Impossible de supprimer ce commentaire."));
     } finally {
-      // L'indicateur porte l'identifiant du commentaire : supprimer l'un
-      // d'eux désactivait auparavant les boutons de tous les autres.
       setDeletingId(null);
     }
   };
 
   if (!Array.isArray(comments) || comments.length === 0) {
-    return <p className="text-gray-400 text-center mt-6">Aucun commentaire</p>;
+    return (
+      <p className="mt-6 text-center text-sm text-ink-500">
+        Aucun commentaire pour le moment.
+      </p>
+    );
   }
 
   return (
-    <div className="w-full shadow-lg mt-6 space-y-4">
-      {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+    <div className="mt-6 flex flex-col gap-3">
+      {error && <p className="text-center text-sm text-brand-400">{error}</p>}
 
       {comments.map((comment) => {
         const isAuthor = isAuthenticated && user && comment.userId === user.id;
         const isDeleting = deletingId === comment.id;
 
         return (
-          <div
+          <article
             key={comment.id}
-            className="relative bg-gray-800 text-white p-4 rounded-lg shadow-md transition-all duration-300 hover:bg-gray-700"
+            className="rounded-md bg-ink-900 p-4 ring-1 ring-white/5"
           >
-            <div className="flex items-center gap-3 pr-8">
-              {comment.authorPicture && (
+            <div className="flex items-center gap-3">
+              {comment.authorPicture ? (
                 <img
                   src={comment.authorPicture}
                   alt=""
                   loading="lazy"
-                  className="w-8 h-8 rounded-full object-cover"
+                  className="h-8 w-8 shrink-0 rounded-full object-cover"
                 />
+              ) : (
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-ink-850 text-ink-500">
+                  <User size={14} strokeWidth={2} />
+                </span>
               )}
-              {/* Le pseudo est désormais renvoyé par l'API ; ce champ
-                  s'affichait auparavant systématiquement vide. */}
-              <strong className="text-blue-400">{comment.author || "Utilisateur"}</strong>
-              <span className="text-xs text-gray-400 italic ml-auto">
-                {timeSince(comment.createdAt)}
+
+              <span className="truncate text-sm font-bold text-ink-100">
+                {comment.author || "Utilisateur"}
               </span>
+
+              <time
+                dateTime={comment.createdAt}
+                className="ml-auto shrink-0 text-xs text-ink-500"
+              >
+                {timeSince(comment.createdAt)}
+              </time>
+
+              {isAuthor && (
+                <button
+                  type="button"
+                  onClick={() => handleDelete(comment.id)}
+                  disabled={isDeleting}
+                  aria-label="Supprimer mon commentaire"
+                  className="shrink-0 rounded-full p-1.5 text-ink-500 transition-colors duration-300 hover:bg-white/5 hover:text-brand-400 disabled:opacity-40"
+                >
+                  <Trash2 size={16} strokeWidth={2} />
+                </button>
+              )}
             </div>
 
-            <p className="mt-2 text-gray-300 whitespace-pre-wrap break-words">
-              {comment.text}
+            <p className="mt-2.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink-300">
+              {cleanText(comment.text)}
             </p>
-
-            {isAuthor && (
-              <button
-                onClick={() => handleDelete(comment.id)}
-                disabled={isDeleting}
-                aria-label="Supprimer le commentaire"
-                className={`absolute top-2 right-2 text-gray-400 hover:text-red-500 transition duration-300 ${
-                  isDeleting ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-              >
-                <Trash2 size={20} />
-              </button>
-            )}
-          </div>
+          </article>
         );
       })}
     </div>

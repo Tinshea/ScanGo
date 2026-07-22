@@ -1,3 +1,9 @@
-# https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+Allow: /
+
+# Contenu personnel ou combinatoire, sans valeur pour l'indexation.
+Disallow: /User/
+Disallow: /EditProfil/
+Disallow: /search/
+
+Sitemap: https://scan-go-lake.vercel.app/sitemap.xml

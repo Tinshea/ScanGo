@@ -1,11 +1,22 @@
-import React, { useEffect, useState, useContext, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState, useContext, useCallback } from "react";
+import { useParams, Link } from "react-router-dom";
+import { BookOpen, Heart, HeartOff } from "lucide-react";
 import { AuthContext } from "./AuthContext";
 import ChapterList from "./ChapterList";
 import LoadingComponent from "./LoadingComponent";
 import PopupComponent from "./PopupComponent";
-import "../Css/MangaDetails.css";
+import Seo from "./Seo";
 import api, { messageFromError } from "../api";
+import { cleanText } from "../utils/date";
+
+// Libellés de statut. L'interface affichait la valeur brute de l'API, en
+// anglais et en minuscules, au milieu d'une interface française.
+const STATUS_LABELS = {
+  ongoing: "En cours",
+  completed: "Terminé",
+  hiatus: "En pause",
+  cancelled: "Abandonné",
+};
 
 const MangaDetails = () => {
   const { id } = useParams();
@@ -14,10 +25,7 @@ const MangaDetails = () => {
   const [loadError, setLoadError] = useState("");
   const [popupMessage, setPopupMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
 
-  // L'état « suivi » est dérivé du profil plutôt que dupliqué dans un state
-  // local, qui se désynchronisait dès qu'un appel échouait.
   const isFollowing = Boolean(user?.followedMangas?.includes(id));
 
   useEffect(() => {
@@ -36,13 +44,9 @@ const MangaDetails = () => {
     };
 
     fetchData();
-    // Le drapeau évite de mettre à jour l'état d'un composant démonté quand
-    // l'utilisateur navigue avant la fin de la requête.
     return () => {
       cancelled = true;
     };
-    // `user` est volontairement hors des dépendances : rafraîchir le profil ne
-    // doit pas relancer la requête catalogue.
   }, [id]);
 
   const toggleFollow = useCallback(async () => {
@@ -54,9 +58,6 @@ const MangaDetails = () => {
     const nextState = !isFollowing;
     setIsSubmitting(true);
     try {
-      // L'identifiant utilisateur n'est plus transmis : le serveur le déduit
-      // du jeton. Chaque appel est désormais attendu et son échec traité,
-      // alors qu'il partait auparavant sans await ni catch.
       await api.post(nextState ? "/user/follow/" : "/user/unfollow/", {
         mangaId: id,
       });
@@ -69,110 +70,156 @@ const MangaDetails = () => {
     }
   }, [isAuthenticated, isFollowing, id, setFollowing]);
 
-  const readFirstChapter = () => {
-    if (manga?.chapters?.length > 0) {
-      // Les chapitres arrivent du plus récent au plus ancien : le premier
-      // chapitre est donc le dernier élément de la liste.
-      const first = manga.chapters[manga.chapters.length - 1];
-      navigate(`/chapter/${first.id}`, { state: { mangaDetails: manga } });
-    } else {
-      setPopupMessage("Aucun chapitre disponible pour ce titre.");
-    }
-  };
-
   if (loadError) {
     return (
-      <div className="min-h-screen bg-[#050816] text-white flex flex-col items-center justify-center p-6 text-center">
-        <p className="text-xl font-semibold">{loadError}</p>
-        <button
-          onClick={() => navigate("/")}
-          className="mt-6 px-6 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg font-semibold transition"
+      <div className="container-page flex min-h-[60vh] flex-col items-center justify-center gap-6 text-center">
+        <p className="text-lg text-ink-200">{loadError}</p>
+        <Link
+          to="/"
+          className="rounded-full bg-brand-500 px-6 py-3 text-sm font-bold whitespace-nowrap text-white transition-colors duration-300 hover:bg-brand-600"
         >
           Retour à l&apos;accueil
-        </button>
+        </Link>
       </div>
     );
   }
 
-  if (!manga) {
-    return <LoadingComponent />;
-  }
+  if (!manga) return <LoadingComponent />;
 
-  const description = manga.description?.en || "Aucune description disponible.";
+  // Normalisation des tirets cadratins présents dans les données MangaDex.
+  const title = cleanText(manga.title);
+  const description = cleanText(manga.description?.en || "");
+  const status = STATUS_LABELS[manga.status] || manga.status;
+  const firstChapter = manga.chapters?.[manga.chapters.length - 1];
 
   return (
-    <div className="max-w-screen-lg mx-auto p-6 bg-[#050816] min-h-screen">
-      {/* Le popup n'était monté nulle part : les messages ne s'affichaient jamais. */}
+    <>
+      <Seo
+        title={title}
+        path={`/manga/${id}`}
+        image={manga.image}
+        type="book"
+        description={
+          description ||
+          `Lisez ${title} en ligne sur MangaGo. ${manga.chapters?.length || 0} chapitres disponibles.`
+        }
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Book",
+          name: title,
+          image: manga.image,
+          inLanguage: "en",
+          genre: manga.genre,
+          datePublished: manga.year ? String(manga.year) : undefined,
+          description: description || undefined,
+          numberOfPages: undefined,
+          bookFormat: "https://schema.org/GraphicNovel",
+        }}
+      />
+
       {popupMessage && (
         <PopupComponent message={popupMessage} onClose={() => setPopupMessage("")} />
       )}
 
-      <div className="relative w-full h-[40vh] overflow-hidden">
-        <img
-          referrerPolicy="no-referrer"
-          src={manga.image}
-          alt={`Bannière de ${manga.title}`}
-          className="relative inset-0 w-full h-full object-cover [object-position:center_25%]"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#050816]"></div>
-      </div>
+      {/* Bandeau. L'image de couverture est étirée en fond, floutée et
+          assombrie, pour poser une ambiance sans nuire à la lisibilité. */}
+      <div className="relative">
+        <div className="absolute inset-0 h-[40vh] overflow-hidden">
+          <img
+            referrerPolicy="no-referrer"
+            src={manga.image}
+            alt=""
+            aria-hidden="true"
+            className="h-full w-full scale-110 object-cover object-[center_25%] blur-2xl saturate-150"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-ink-950/60 via-ink-950/85 to-ink-950" />
+        </div>
 
-      <div className="flex flex-col lg:flex-row mt-6 gap-6">
-        <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-full lg:w-1/4">
-          <div className="flex items-start space-x-4">
-            <img
-              referrerPolicy="no-referrer"
-              loading="lazy"
-              src={manga.image}
-              alt={`Couverture de ${manga.title}`}
-              className="w-36 h-auto rounded-md"
-            />
-            <div>
-              <h1 className="text-xl font-bold text-white">{manga.title}</h1>
-              <p className="text-sm text-gray-300">Statut : {manga.status}</p>
-              {manga.year > 0 && <p className="text-sm text-gray-400">{manga.year}</p>}
+        <div className="container-page relative pt-10 md:pt-16">
+          {/* Disposition désaxée, deux tiers un tiers, plutôt que la colonne
+              étroite de 25 pour cent qui écrasait le résumé. */}
+          <div className="grid gap-8 md:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
+            <div className="mx-auto w-44 shrink-0 md:mx-0 md:w-full">
+              <img
+                referrerPolicy="no-referrer"
+                src={manga.image}
+                alt={`Couverture de ${title}`}
+                className="w-full rounded-lg shadow-[0_24px_60px_-20px_rgba(0,0,0,0.9)] ring-1 ring-white/10"
+              />
+            </div>
+
+            <div className="flex flex-col gap-5">
+              {/* Titre de page unique, en h1. Le titre du manga était
+                  auparavant un h1 concurrent des titres de section. */}
+              <div>
+                <h1 className="text-3xl text-ink-050 md:text-4xl">{title}</h1>
+                <p className="mt-2 text-sm text-ink-400">
+                  {status}
+                  {manga.year > 0 && ` · ${manga.year}`}
+                  {manga.chapters?.length > 0 &&
+                    ` · ${manga.chapters.length} chapitre${manga.chapters.length > 1 ? "s" : ""}`}
+                </p>
+              </div>
+
+              {manga.genre?.length > 0 && (
+                <ul className="flex flex-wrap gap-2">
+                  {manga.genre.map((genre) => (
+                    <li key={genre}>
+                      <Link
+                        to={`/tag/${encodeURIComponent(genre)}`}
+                        className="inline-block rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-ink-200 ring-1 ring-white/10 transition-colors duration-300 hover:bg-white/10 hover:text-ink-050"
+                      >
+                        {genre}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <div className="flex flex-wrap gap-3">
+                {firstChapter ? (
+                  <Link
+                    to={`/chapter/${firstChapter.id}`}
+                    state={{ mangaDetails: manga }}
+                    className="inline-flex items-center gap-2 rounded-full bg-brand-500 px-6 py-3 text-sm font-bold whitespace-nowrap text-white transition-colors duration-300 hover:bg-brand-600"
+                  >
+                    <BookOpen size={18} strokeWidth={2} />
+                    Commencer la lecture
+                  </Link>
+                ) : (
+                  <span className="inline-flex items-center rounded-full bg-ink-850 px-6 py-3 text-sm font-semibold text-ink-400">
+                    Aucun chapitre disponible
+                  </span>
+                )}
+
+                <button
+                  type="button"
+                  onClick={toggleFollow}
+                  disabled={isSubmitting}
+                  className="inline-flex items-center gap-2 rounded-full bg-white/5 px-6 py-3 text-sm font-bold whitespace-nowrap text-ink-100 ring-1 ring-white/10 transition-colors duration-300 hover:bg-white/10 disabled:opacity-50"
+                >
+                  {isFollowing ? (
+                    <HeartOff size={18} strokeWidth={2} />
+                  ) : (
+                    <Heart size={18} strokeWidth={2} />
+                  )}
+                  {isFollowing ? "Ne plus suivre" : "Suivre"}
+                </button>
+              </div>
+
+              <p className="max-w-[65ch] text-sm leading-relaxed text-ink-300">
+                {description || "Aucun résumé disponible pour ce titre."}
+              </p>
             </div>
           </div>
-
-          <div className="flex flex-wrap mt-4 gap-2">
-            {manga.genre?.map((genre) => (
-              <button
-                key={genre}
-                className="text-white text-sm px-3 py-1 rounded border border-white hover:bg-white hover:text-black transition"
-                onClick={() => navigate(`/tag/${encodeURIComponent(genre)}`)}
-              >
-                {genre}
-              </button>
-            ))}
-          </div>
-
-          <div className="mt-4 space-y-2">
-            <button
-              onClick={readFirstChapter}
-              className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded-md transition"
-            >
-              Lire le premier chapitre
-            </button>
-            <button
-              onClick={toggleFollow}
-              disabled={isSubmitting}
-              className={`w-full text-white font-semibold py-2 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed ${
-                isFollowing ? "bg-gray-600 hover:bg-gray-700" : "bg-blue-500 hover:bg-blue-600"
-              }`}
-            >
-              {isSubmitting ? "..." : isFollowing ? "Ne plus suivre" : "Suivre"}
-            </button>
-          </div>
-
-          <p className="mt-4 text-gray-300 text-sm">{description}</p>
-        </div>
-
-        <div className="flex-1 bg-gray-800 p-6 rounded-lg shadow-lg overflow-y-auto">
-          <h2 className="text-white text-lg font-bold mb-4">Chapitres</h2>
-          <ChapterList mangaDetails={manga} />
         </div>
       </div>
-    </div>
+
+      <section className="container-page py-12 md:py-16">
+        <h2 className="mb-5 text-2xl text-ink-050">Chapitres</h2>
+        <ChapterList mangaDetails={manga} />
+      </section>
+    </>
   );
 };
 

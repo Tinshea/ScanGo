@@ -1,7 +1,14 @@
-import React, { useState, useContext } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "./AuthContext";
+import Seo from "./Seo";
 import api, { messageFromError } from "../api";
+import {
+  fieldClass,
+  labelClass,
+  primaryButton,
+  secondaryButton,
+} from "../styles/form";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -22,8 +29,6 @@ const EditProfile = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Validation côté client alignée sur celle du serveur : l'utilisateur est
-  // averti avant l'envoi plutôt qu'après un aller-retour réseau.
   const handleFileChange = (event, setFile, setPreview) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -57,15 +62,16 @@ const EditProfile = () => {
       return;
     }
     if (password && password.length < MIN_PASSWORD_LEN) {
-      setErrorMessage(`Le mot de passe doit contenir au moins ${MIN_PASSWORD_LEN} caractères.`);
+      setErrorMessage(
+        `Le mot de passe doit contenir au moins ${MIN_PASSWORD_LEN} caractères.`
+      );
       return;
     }
 
     setLoading(true);
 
-    // Seuls les champs réellement remplis sont envoyés. L'identifiant n'est
-    // plus transmis : le serveur le déduit du jeton, ce qui empêchait
-    // jusqu'ici de modifier n'importe quel compte en changeant ce champ.
+    // Noms de champs inchangés (username, password, banner, ProfilePicture) :
+    // la règle 11.F interdit de les renommer.
     const data = new FormData();
     if (username) data.append("username", username);
     if (password) data.append("password", password);
@@ -74,10 +80,8 @@ const EditProfile = () => {
 
     try {
       await api.put("/updateuser", data);
-      // Le profil global est resynchronisé pour que la navbar et le profil
-      // reflètent immédiatement le changement.
       await refreshUser();
-      setSuccessMessage("Profil mis à jour avec succès.");
+      setSuccessMessage("Profil mis à jour.");
       setPassword("");
       setTimeout(() => navigate(`/User/${user?.id}`), 1200);
     } catch (error) {
@@ -88,109 +92,116 @@ const EditProfile = () => {
   };
 
   return (
-    <div className="flex flex-col items-center bg-gray-900/80 text-white p-8 rounded-lg shadow-xl sm:w-1/2 max-w-lg mx-auto mt-8">
-      <h2 className="text-2xl font-semibold mb-6">Éditer le profil</h2>
+    <div className="container-page max-w-xl py-12">
+      <Seo title="Modifier mon profil" path={`/EditProfil/${user?.id ?? ""}`} noindex />
 
-      <form onSubmit={handleSubmit} className="flex flex-col w-full space-y-4">
-        {loading && <p className="text-blue-400">Enregistrement...</p>}
-        {/* Les retours passaient par alert() : le message est désormais
-            affiché dans la page, comme les erreurs. */}
+      <h1 className="mb-8 text-2xl text-ink-050 md:text-3xl">Modifier mon profil</h1>
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         {errorMessage && (
-          <p className="text-red-500" role="alert">
+          <p role="alert" className="text-sm text-brand-400">
             {errorMessage}
           </p>
         )}
         {successMessage && (
-          <p className="text-green-400" role="status">
+          <p role="status" className="text-sm text-accent-500">
             {successMessage}
           </p>
         )}
 
-        <label htmlFor="username" className="font-medium">
-          Nom d&apos;utilisateur (laissez vide si inchangé) :
-        </label>
-        <input
-          type="text"
-          id="username"
-          name="username"
-          maxLength={32}
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder={user?.username || ""}
-          className="w-full p-2 rounded-md bg-gray-800 border border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none"
-        />
-
-        <label htmlFor="password" className="font-medium">
-          Nouveau mot de passe (laissez vide si inchangé) :
-        </label>
-        <input
-          type="password"
-          id="password"
-          name="password"
-          autoComplete="new-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-2 rounded-md bg-gray-800 border border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none"
-        />
-
-        <div className="flex flex-col items-center space-y-3">
-          <label htmlFor="banner" className="font-medium">
-            Bannière :
+        <div>
+          <label htmlFor="username" className={labelClass}>
+            Nom d&apos;utilisateur
           </label>
           <input
-            type="file"
+            id="username"
+            name="username"
+            type="text"
+            maxLength={32}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder={user?.username || ""}
+            className={fieldClass}
+          />
+          <p className="mt-1.5 text-xs text-ink-400">
+            Laissez vide pour ne pas changer
+          </p>
+        </div>
+
+        <div>
+          <label htmlFor="password" className={labelClass}>
+            Nouveau mot de passe
+          </label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className={fieldClass}
+          />
+          <p className="mt-1.5 text-xs text-ink-400">
+            Laissez vide pour ne pas changer, 8 caractères minimum sinon
+          </p>
+        </div>
+
+        <div>
+          <label htmlFor="banner" className={labelClass}>
+            Bannière
+          </label>
+          <input
             id="banner"
             name="banner"
+            type="file"
             accept={ACCEPTED_TYPES.join(",")}
             onChange={(e) => handleFileChange(e, setBanner, setBannerPreview)}
-            className="w-full p-2 rounded-md bg-gray-800 border border-gray-600 cursor-pointer"
+            className="w-full cursor-pointer rounded-md bg-ink-850 px-4 py-2.5 text-sm text-ink-200 ring-1 ring-white/10 file:mr-3 file:rounded-full file:border-0 file:bg-white/10 file:px-3 file:py-1 file:text-xs file:font-semibold file:text-ink-100"
           />
           {bannerPreview && (
             <img
               src={bannerPreview}
               alt="Aperçu de la bannière"
-              className="w-full rounded-lg shadow-md border border-gray-700"
+              className="mt-3 w-full rounded-md ring-1 ring-white/10"
             />
           )}
         </div>
 
-        <div className="flex flex-col items-center space-y-3">
+        <div>
           {/* htmlFor pointait vers « profilePicture » alors que le champ a pour
-              id « ProfilePicture » : le libellé n'était lié à rien. */}
-          <label htmlFor="ProfilePicture" className="font-medium">
-            Image de profil :
+              identifiant « ProfilePicture » : le libellé n'était lié à rien. */}
+          <label htmlFor="ProfilePicture" className={labelClass}>
+            Photo de profil
           </label>
           <input
-            type="file"
             id="ProfilePicture"
             name="ProfilePicture"
+            type="file"
             accept={ACCEPTED_TYPES.join(",")}
-            onChange={(e) => handleFileChange(e, setProfilePicture, setProfilePicturePreview)}
-            className="w-full p-2 rounded-md bg-gray-800 border border-gray-600 cursor-pointer"
+            onChange={(e) =>
+              handleFileChange(e, setProfilePicture, setProfilePicturePreview)
+            }
+            className="w-full cursor-pointer rounded-md bg-ink-850 px-4 py-2.5 text-sm text-ink-200 ring-1 ring-white/10 file:mr-3 file:rounded-full file:border-0 file:bg-white/10 file:px-3 file:py-1 file:text-xs file:font-semibold file:text-ink-100"
           />
           {profilePicturePreview && (
             <img
               src={profilePicturePreview}
               alt="Aperçu de la photo de profil"
-              className="w-24 h-24 rounded-full border-2 border-gray-500 shadow-md object-cover"
+              className="mt-3 h-24 w-24 rounded-full object-cover ring-1 ring-white/10"
             />
           )}
         </div>
 
-        <div className="flex gap-3">
+        <div className="mt-2 flex gap-3">
           <button
             type="button"
             onClick={() => navigate(`/User/${user?.id}`)}
-            className="flex-1 p-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-md transition duration-300"
+            className={`flex-1 ${secondaryButton}`}
           >
             Annuler
           </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex-1 p-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-md transition duration-300 disabled:bg-gray-500 disabled:cursor-not-allowed"
-          >
-            {loading ? "Mise à jour..." : "Mettre à jour"}
+          <button type="submit" disabled={loading} className={`flex-1 ${primaryButton}`}>
+            {loading ? "Enregistrement..." : "Enregistrer"}
           </button>
         </div>
       </form>

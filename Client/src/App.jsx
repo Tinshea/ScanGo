@@ -17,36 +17,33 @@ function App() {
     <Router>
       <div className="App">
         <Navbar />
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <div className="app-container">
-                <Home />
-              </div>
-            }
-          />
 
-          {/* L'édition de profil n'est accessible qu'à son propriétaire. */}
-          <Route
-            path="/EditProfil/:id"
-            element={
-              <ProtectedRoute requireSelf>
-                <EditProfile />
-              </ProtectedRoute>
-            }
-          />
+        {/* Cible du lien d'évitement placé dans l'en-tête. */}
+        <main id="contenu-principal" className="flex-1">
+          <Routes>
+            <Route path="/" element={<Home />} />
 
-          <Route path="/manga/:id" element={<MangaDetails />} />
-          <Route path="/chapter/:chapterId" element={<Chapter />} />
-          <Route path="/User/:id" element={<ProfilePage />} />
-          <Route path="/search/:query" element={<ShowSearch />} />
-          <Route path="/tag/:query" element={<ShowTag />} />
-          <Route path="/browse/:section" element={<Browse />} />
+            {/* L'édition de profil n'est accessible qu'à son propriétaire. */}
+            <Route
+              path="/EditProfil/:id"
+              element={
+                <ProtectedRoute requireSelf>
+                  <EditProfile />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Toute autre URL affiche une page dédiée plutôt qu'un écran vide. */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            <Route path="/manga/:id" element={<MangaDetails />} />
+            <Route path="/chapter/:chapterId" element={<Chapter />} />
+            <Route path="/User/:id" element={<ProfilePage />} />
+            <Route path="/search/:query" element={<ShowSearch />} />
+            <Route path="/tag/:query" element={<ShowTag />} />
+            <Route path="/browse/:section" element={<Browse />} />
+
+            {/* Toute autre URL affiche une page dédiée plutôt qu'un écran vide. */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
       </div>
     </Router>
   );

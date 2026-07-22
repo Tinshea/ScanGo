@@ -1,38 +1,40 @@
-# Étape 1 : Build l’application Go
-FROM golang:1.23 AS build
+# Étape 1 : build de l'application Go
+#
+# Le module cible Go 1.22 (cf. go.mod) pour rester compilable avec le
+# toolchain installé en local ; l'image de build utilise une version plus
+# récente, qui embarque moins de vulnérabilités connues.
+FROM golang:1.24-alpine AS build
 
 WORKDIR /app
 
-# Copier les fichiers go.mod et go.sum et récupérer les dépendances
+# Les dépendances sont résolues avant la copie du code source : cette couche
+# reste en cache tant que go.mod / go.sum ne changent pas.
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copier tout le code source
 COPY . .
 
-# Mettre à jour go.sum et télécharger les nouvelles dépendances
-RUN go mod tidy
+# Les tests s'exécutent dans le build : une régression sur l'authentification
+# ou le filtre de contenu bloque la production de l'image.
+RUN go vet ./... && go test ./...
 
-# Compiler l'application en statique pour Linux AMD64
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o app .
+# Binaire statique, sans table de symboles ni informations de debug.
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /app/server .
 
-# Étape 2 : Utilisation d'une image légère
-FROM alpine:latest
+# Étape 2 : image d'exécution minimale
+FROM alpine:3.20
+
+# ca-certificates est nécessaire aux appels HTTPS (MongoDB Atlas, MangaDex,
+# Cloudinary). libc6-compat ne l'est pas : le binaire est statique.
 RUN apk add --no-cache ca-certificates
 
-WORKDIR /root/
+# Exécution sans privilèges : le conteneur tournait auparavant en root.
+RUN adduser -D -u 10001 scango
+USER scango
 
-# Installer libc6-compat pour compatibilité avec les binaires Go
-RUN apk add --no-cache libc6-compat
+WORKDIR /home/scango
+COPY --from=build --chown=scango:scango /app/server ./server
 
-# Copier l'exécutable
-COPY --from=build /app/app .
-
-# Vérifier si l'exécutable existe et a les bonnes permissions
-RUN ls -la /root/app && chmod +x /root/app
-
-# Définir le port exposé
 EXPOSE 8080
 
-# Lancer l'application
-CMD ["./app"]
+CMD ["./server"]

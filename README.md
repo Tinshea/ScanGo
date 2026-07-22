@@ -2,24 +2,44 @@
 
 > Personal full-stack project by Malek Bouzarkouna
 
-A full-stack manga reader web application inspired by MangaDex, built with React, Golang, and MongoDB. It aggregates real-time manga data from the MangaDex API, supports a complete user account system with social features.
-
+A full-stack manga reader web application inspired by MangaDex, built with React, Golang, and MongoDB. It aggregates real-time manga data from the MangaDex API and supports a complete user account system with social features.
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: React, React Router, CSS
-- **Backend**: Golang (REST API, high-performance concurrent server)
+- **Frontend**: React 18, React Router, Vite, Tailwind CSS
+- **Backend**: Golang (REST API, JWT auth)
 - **Database**: MongoDB (user data, comments, preferences)
-- **Tools & Services**: Docker, Docker Compose, Cloudinary (image hosting), MangaDex API, AI chatbot integration
+- **Tools & Services**: Docker, Docker Compose, Cloudinary (image hosting), MangaDex API
 
 ## 📦 Installation & Setup
 
 ### Prerequisites
 
-- Node.js & npm
-- Go 1.20+
+- Node.js 18+ & npm
+- Go 1.22+
 - MongoDB (local or Atlas)
-- A Cloudinary account (for image uploads)
+- A Cloudinary account (optional — image uploads are disabled without it)
+
+### Configuration
+
+All secrets are read from the environment; none are committed. Copy the
+template and fill it in before the first run:
+
+```bash
+cp .env.example .env
+# Generate a signing key — the server refuses to start with a short one
+openssl rand -base64 48   # paste into JWT_SECRET
+```
+
+| Variable | Required | Purpose |
+|---|:---:|---|
+| `MONGO_URI` | ✅ | MongoDB connection string |
+| `JWT_SECRET` | ✅ | Token signing key, 32 characters minimum |
+| `CLOUDINARY_URL` | — | Image uploads; disabled (503) when unset |
+| `ALLOWED_ORIGINS` | — | CORS allowlist, comma-separated |
+| `ALLOWED_CONTENT_RATINGS` | — | Content filter (default `safe,suggestive`) |
+| `EXCLUDED_TAGS` | — | MangaDex tag UUIDs to exclude |
+| `PORT` | — | Listen port (default `8080`) |
 
 ### Instructions
 
@@ -36,36 +56,65 @@ docker-compose up --build
 # 3a. Frontend
 cd Client
 npm install
-npm start
+npm run dev
 
 # 3b. Backend (separate terminal)
 cd Gotestweb
-go run main.go
+go run .
+```
+
+### Tests & quality checks
+
+```bash
+cd Gotestweb && go vet ./... && go test ./...   # backend
+cd Client    && npm run lint && npm run build   # frontend
 ```
 
 ## ✨ Features
 
 ### Manga Discovery & Reading
-Users can browse trending manga on the homepage powered by the MangaDex API, search by title or genre, and read chapters in an immersive inline reader.
+Browse trending manga on the homepage powered by the MangaDex API, search by
+title or genre, and read chapters in an immersive inline reader.
+
+### Content Filtering
+Only titles matching the configured content ratings are served — `safe` and
+`suggestive` by default. The filter is enforced server-side on every path
+(listings, title pages, and chapter reading), so a direct link cannot bypass
+it. Gore and sexual-violence tags are excluded as well.
 
 ### User Account System
-Full registration and login flow with passwords hashed via `bcrypt`. Users maintain a reading history and a favorites list.
+Registration and login with passwords hashed via `bcrypt`. Every write
+operation requires a valid JWT, and the caller's identity is taken from the
+token — never from a request parameter. Users maintain a reading history and a
+favorites list.
 
 ### Social Features
-Readers can post comments on individual chapters and interact with the community around each series.
+Post comments on individual chapters. Comments can only be deleted by their
+author, enforced server-side.
 
 ### Profile Customization
-Each user can personalize their profile with a custom username, banner image, and profile picture — all stored and delivered via Cloudinary.
-
+Personalize a profile with a custom username, banner, and profile picture,
+stored and delivered via Cloudinary. Uploads are validated by content
+signature (not by file extension) and capped at 5 MB.
 
 ## 🗂️ Project Structure
 
 ```
 ScanGo/
-├── Client/             # React frontend (pages, components, routing)
-├── Gotestweb/          # Golang backend (REST API, handlers, DB layer)
-├── docker-compose.yaml # Full-stack local orchestration
-└── package-lock.json
+├── Client/                 # React frontend
+│   └── src/
+│       ├── api.js          # Shared HTTP client (auth, error handling)
+│       ├── Component/      # Components and pages
+│       └── utils/          # Shared helpers
+├── Gotestweb/              # Golang backend
+│   ├── auth/               # JWT issuing, verification, middleware
+│   ├── config/             # Environment loading with fail-fast validation
+│   ├── mangadex/           # MangaDex client, content filter, tag resolution
+│   ├── controllers/        # HTTP handlers
+│   ├── database/           # MongoDB connection
+│   └── models/             # Data structures
+├── docker-compose.yaml     # Full-stack local orchestration
+└── .env.example            # Configuration template
 ```
 
 ## 👤 Author

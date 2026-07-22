@@ -148,20 +148,17 @@ type Mangareturn struct {
 	Genre       []string          `json:"genre"`
 	Flag        string            `json:"flag"`
 	Year        int               `json:"year"`
+	// ContentRating est exposé au front pour afficher un badge et permettre un
+	// filtrage côté client en complément du filtre serveur.
+	ContentRating string `json:"contentRating"`
 }
 
+// MangaReturnWithChapters compose Mangareturn plutôt que d'en recopier les
+// champs. La structure imbriquée anonyme est aplatie par encoding/json : la
+// forme du JSON produit reste identique pour le front.
 type MangaReturnWithChapters struct {
-	Title       string            `json:"title"`
-	AltTitles   map[string]string `json:"altTitles"`
-	Description map[string]string `json:"description"`
-	Type        string            `json:"type"`
-	Image       string            `json:"image"`
-	Status      string            `json:"status"`
-	ID          string            `json:"id"`
-	Genre       []string          `json:"genre"`
-	Flag        string            `json:"flag"`
-	Year        int               `json:"year"`
-	Chapters    []Chapter         `json:"chapters"` // Added chapters field to include chapter data
+	Mangareturn
+	Chapters []Chapter `json:"chapters"`
 }
 
 type Manga struct {

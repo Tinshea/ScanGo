@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { motion } from "framer-motion";
 import { Search, X } from "lucide-react";
 import DefaultPicture from "../Assets/Disconnected.png";
-import { AuthContext } from "./AuthProvider";
+import { AuthContext } from "./AuthContext";
 import { useNavigate } from "react-router-dom";
 import '../Css/SearchBarWithSpeakers.css';
 
@@ -22,8 +22,13 @@ const Icone = ({ SidePanelfunc }) => {
   }, [isAuthenticated, user]);
 
   const handleSearch = () => {
-    navigate(`/search/${searchValue}`);
+    // Une recherche vide menait vers /search/ — une URL sans résultat ni
+    // message. Le champ est désormais requis avant navigation.
+    const term = searchValue.trim();
+    if (!term) return;
+    navigate(`/search/${encodeURIComponent(term)}`);
     setSearchValue("");
+    setIsSearchOpen(false);
   };
 
   const handleChange = (event) => {
@@ -48,12 +53,12 @@ const Icone = ({ SidePanelfunc }) => {
           type="text"
           className="w-full bg-transparent text-black placeholder-gray-800 outline-none text-sm px-2 py-1"
           placeholder="Rechercher..."
+          value={searchValue}
           onChange={handleChange}
-          onKeyPress={(event) => {
-            if (event.key === "Enter") {
-              handleSearch();
-              event.target.value = "";
-            }
+          // onKeyPress est déprécié depuis React 17 ; la valeur est par
+          // ailleurs pilotée par l'état plutôt que mutée sur l'événement.
+          onKeyDown={(event) => {
+            if (event.key === "Enter") handleSearch();
           }}
         />
 

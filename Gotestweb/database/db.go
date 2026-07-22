@@ -53,10 +53,11 @@ func Disconnect() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	err := Client.Disconnect(ctx)
-	if err != nil {
-		log.Fatal("Erreur lors de la déconnexion de MongoDB:", err)
-	} else {
-		fmt.Println("Déconnecté de MongoDB avec succès.")
+	// Journaliser sans interrompre : l'arrêt est déjà en cours, un log.Fatal
+	// ici empêcherait la suite du nettoyage de s'exécuter.
+	if err := Client.Disconnect(ctx); err != nil {
+		log.Printf("Erreur lors de la déconnexion de MongoDB : %v", err)
+		return
 	}
+	fmt.Println("Déconnecté de MongoDB avec succès.")
 }

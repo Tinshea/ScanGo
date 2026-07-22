@@ -6,12 +6,18 @@ services:
     dns:
       - 8.8.8.8
     environment:
-      - MONGO_URI=${MONGO_URI}
-      - AIMLAPI_KEY=${AIMLAPI_KEY}
-      - CLOUDINARY_URL=${CLOUDINARY_URL}
-      - JWT_SECRET=${JWT_SECRET}
+      # Valeurs lues depuis le fichier .env (non versionné).
+      # Voir .env.example pour la liste et le format attendus.
+      - MONGO_URI=${MONGO_URI:?MONGO_URI est requis}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET est requis (32 caractères minimum)}
+      - CLOUDINARY_URL=${CLOUDINARY_URL:-}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173}
+      # Filtre de contenu : safe et suggestive uniquement par défaut.
+      # L'API MangaDex inclut « erotica » si ce paramètre n'est pas transmis.
+      - ALLOWED_CONTENT_RATINGS=${ALLOWED_CONTENT_RATINGS:-safe,suggestive}
     depends_on:
       - mongo
+    restart: unless-stopped
 
   frontend:
     build: ./Client
@@ -19,10 +25,11 @@ services:
       - "3000:80"
     depends_on:
       - backend
+    restart: unless-stopped
 
   mongo:
-    image: mongo
-    restart: always
+    image: mongo:7
+    restart: unless-stopped
     ports:
       - "27017:27017"
     volumes:

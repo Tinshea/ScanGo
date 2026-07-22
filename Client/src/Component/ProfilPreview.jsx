@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { AuthContext } from "./AuthProvider";
+import { AuthContext } from "./AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const ProfilPreview = ({ user, handlegoprofil }) => {

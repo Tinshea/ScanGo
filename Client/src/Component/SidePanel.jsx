@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { motion } from "framer-motion";
 import PropTypes from "prop-types";
-import { AuthContext } from "./AuthProvider";
+import { AuthContext } from "./AuthContext";
 import SignInPage from "./SignInPage";
 import { useNavigate } from "react-router-dom";
 import ProfilPreview from "./ProfilPreview";

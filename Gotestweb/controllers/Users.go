@@ -1,381 +1,408 @@
 package controllers
 
 import (
+	"Gotestweb/auth"
 	db "Gotestweb/database"
 	"Gotestweb/models"
-	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
+	"log"
 	"net/http"
-	"os"
-	"time"
+	"strings"
 
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func SignUp(w http.ResponseWriter, r *http.Request) {
-	// Parse the request body
-	var user models.User
+const (
+	// minPasswordLen impose une longueur minimale à l'inscription.
+	minPasswordLen = 8
+	// maxUsernameLen borne le nom d'utilisateur.
+	maxUsernameLen = 32
+	// maxUploadBytes plafonne un formulaire multipart (images de profil).
+	maxUploadBytes = 5 << 20 // 5 Mio
+)
 
-	err := json.NewDecoder(r.Body).Decode(&user)
-	if err != nil {
-		http.Error(w, "Erreur lors de la lecture du corps de la requête", http.StatusBadRequest)
-		return
-	}
+// defaultProfilePicture et defaultBanner sont les visuels attribués à
+// l'inscription.
+const (
+	defaultProfilePicture = "https://res.cloudinary.com/dhmplkcxd/image/upload/v1712792989/ScanGo/ProfilePicture/default_profile_picture.webp"
+	defaultBanner         = "https://res.cloudinary.com/dhmplkcxd/image/upload/v1712793917/ScanGo/Banner/default_banner.png"
+)
 
-	// Validate the user data
-	if user.Username == "" || user.Password == "" {
-		http.Error(w, "Nom d'utilisateur ou mot de passe manquant", http.StatusBadRequest)
-		return
-	}
-
-	client := db.Client
-	// Check if the username already exists
-	var result models.User
-	err = client.Database(db.DBName).Collection("User").FindOne(context.TODO(), bson.M{"username": user.Username}).Decode(&result)
-	if err != mongo.ErrNoDocuments {
-		http.Error(w, "Nom d'utilisateur déjà pris", http.StatusBadRequest)
-		return
-	}
-
-	// Hash the password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	if err != nil {
-		http.Error(w, "Erreur lors du hachage du mot de passe", http.StatusInternalServerError)
-		return
-	}
-
-	// Create a new user document
-	newUser := models.User{
-		ID:             generateId(), // Store the token in the ID field
-		Username:       user.Username,
-		Password:       string(hashedPassword),
-		ProfilePicture: "https://res.cloudinary.com/dhmplkcxd/image/upload/v1712792989/ScanGo/ProfilePicture/default_profile_picture.webp", // Default profile picture
-		Banner:         "https://res.cloudinary.com/dhmplkcxd/image/upload/v1712793917/ScanGo/Banner/default_banner.png",                   // Default banner
-		Theme:          "default",                                                                                                          // Default theme
-		FollowedMangas: make([]string, 0),                                                                                                  // Empty list of followed mangas
-		Mangas:         make([]models.MangaUser, 0),                                                                                        // Empty list of mangas
-	}
-
-	// Generate a JWT token
-	token, err := generateToken(newUser.ID)
-	if err != nil {
-		http.Error(w, "Erreur lors de la génération du token", http.StatusInternalServerError)
-		return
-	}
-
-	// Insert the user document into the database
-
-	collection := client.Database(db.DBName).Collection("User")
-
-	// Insert the document
-	_, err = collection.InsertOne(context.TODO(), newUser)
-	if err != nil {
-		http.Error(w, "Erreur lors de l'insertion de l'utilisateur dans la base de données", http.StatusInternalServerError)
-		return
-	}
-
-	// Send a success response
-	w.WriteHeader(http.StatusCreated)
-	// Send the token and user ID in the response
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{"token": token, "id": newUser.ID, "username": newUser.Username, "profile_picture": newUser.ProfilePicture})
+// credentials est le format attendu pour l'inscription et la connexion.
+// Décoder dans une structure dédiée plutôt que dans models.User évite qu'un
+// client puisse pré-remplir des champs comme ID ou FollowedMangas.
+type credentials struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
-func SignIn(w http.ResponseWriter, r *http.Request) {
-	// Parse the request body
-	var user models.User
-	err := json.NewDecoder(r.Body).Decode(&user)
-	if err != nil {
-		http.Error(w, "Erreur lors de la lecture du corps de la requête", http.StatusBadRequest)
+// SignUp crée un compte et renvoie un jeton.
+func SignUp(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var creds credentials
+	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
+		http.Error(w, "Corps de requête illisible", http.StatusBadRequest)
 		return
 	}
 
-	// Validate the user data
-	if user.Username == "" || user.Password == "" {
+	username := strings.TrimSpace(creds.Username)
+	if username == "" || creds.Password == "" {
+		http.Error(w, "Nom d'utilisateur ou mot de passe manquant", http.StatusBadRequest)
+		return
+	}
+	if len(username) > maxUsernameLen {
+		http.Error(w, "Nom d'utilisateur trop long", http.StatusBadRequest)
+		return
+	}
+	if len(creds.Password) < minPasswordLen {
+		http.Error(w, "Le mot de passe doit contenir au moins 8 caractères", http.StatusBadRequest)
+		return
+	}
+
+	collection := db.Client.Database(db.DBName).Collection("User")
+
+	// Distinguer « nom déjà pris » d'une véritable panne de base : la version
+	// précédente annonçait « nom déjà pris » sur n'importe quelle erreur.
+	err := collection.FindOne(ctx, bson.M{"username": username}).Err()
+	switch {
+	case err == nil:
+		http.Error(w, "Nom d'utilisateur déjà pris", http.StatusConflict)
+		return
+	case !errors.Is(err, mongo.ErrNoDocuments):
+		log.Printf("SignUp: recherche de l'utilisateur : %v", err)
+		http.Error(w, "Erreur interne", http.StatusInternalServerError)
+		return
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(creds.Password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Printf("SignUp: hachage : %v", err)
+		http.Error(w, "Erreur interne", http.StatusInternalServerError)
+		return
+	}
+
+	newUser := models.User{
+		ID:             uuid.NewString(),
+		Username:       username,
+		Password:       string(hashedPassword),
+		ProfilePicture: defaultProfilePicture,
+		Banner:         defaultBanner,
+		Theme:          "default",
+		FollowedMangas: make([]string, 0),
+		Mangas:         make([]models.MangaUser, 0),
+	}
+
+	if _, err := collection.InsertOne(ctx, newUser); err != nil {
+		log.Printf("SignUp: insertion : %v", err)
+		http.Error(w, "Erreur interne", http.StatusInternalServerError)
+		return
+	}
+
+	token, err := auth.GenerateToken(newUser.ID)
+	if err != nil {
+		log.Printf("SignUp: génération du jeton : %v", err)
+		http.Error(w, "Erreur interne", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"token":           token,
+		"id":              newUser.ID,
+		"username":        newUser.Username,
+		"profile_picture": newUser.ProfilePicture,
+	})
+}
+
+// SignIn authentifie un utilisateur et renvoie un jeton.
+func SignIn(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var creds credentials
+	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
+		http.Error(w, "Corps de requête illisible", http.StatusBadRequest)
+		return
+	}
+	if creds.Username == "" || creds.Password == "" {
 		http.Error(w, "Nom d'utilisateur ou mot de passe manquant", http.StatusBadRequest)
 		return
 	}
 
-	// Retrieve the user document from the database
-
-	client := db.Client
-	// Check if the username already exists
-	var result models.User
-	err = client.Database(db.DBName).Collection("User").FindOne(context.TODO(), bson.M{"username": user.Username}).Decode(&result)
-	if err != nil && err != mongo.ErrNoDocuments {
-		http.Error(w, "Erreur lors de la recherche de l'utilisateur dans la base de données", http.StatusInternalServerError)
-		return
-	}
-	if err == mongo.ErrNoDocuments {
-		http.Error(w, "Nom d'utilisateur ou mot de passe incorrect", http.StatusBadRequest)
+	var user models.User
+	err := db.Client.Database(db.DBName).Collection("User").
+		FindOne(ctx, bson.M{"username": strings.TrimSpace(creds.Username)}).Decode(&user)
+	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
+		log.Printf("SignIn: recherche : %v", err)
+		http.Error(w, "Erreur interne", http.StatusInternalServerError)
 		return
 	}
 
-	// Compare the passwords
-	err = bcrypt.CompareHashAndPassword([]byte(result.Password), []byte(user.Password))
-	if err != nil {
+	// Même message et même statut que le mot de passe erroné, pour ne pas
+	// révéler quels noms d'utilisateur existent.
+	if errors.Is(err, mongo.ErrNoDocuments) {
 		http.Error(w, "Nom d'utilisateur ou mot de passe incorrect", http.StatusUnauthorized)
 		return
 	}
 
-	// Generate a JWT token
-	token, err := generateToken(result.ID)
-	if err != nil {
-		http.Error(w, "Erreur lors de la génération du token", http.StatusInternalServerError)
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(creds.Password)); err != nil {
+		http.Error(w, "Nom d'utilisateur ou mot de passe incorrect", http.StatusUnauthorized)
 		return
 	}
 
-	// Send the token and user ID in the response
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{"token": token, "id": result.ID, "username": result.Username, "profile_picture": result.ProfilePicture})
-}
-func generateId() string {
-	return fmt.Sprintf("%d", time.Now().UnixNano())
-}
-func generateToken(ID string) (string, error) {
-	claims := jwt.MapClaims{
-		"id":  ID,
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
+	token, err := auth.GenerateToken(user.ID)
+	if err != nil {
+		log.Printf("SignIn: génération du jeton : %v", err)
+		http.Error(w, "Erreur interne", http.StatusInternalServerError)
+		return
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+
+	writeJSON(w, map[string]interface{}{
+		"token":           token,
+		"id":              user.ID,
+		"username":        user.Username,
+		"profile_picture": user.ProfilePicture,
+	})
 }
 
+// UpdateUser modifie le profil de l'utilisateur authentifié.
+//
+// L'identifiant provient exclusivement du jeton. Auparavant il était lu dans
+// le formulaire, ce qui permettait à quiconque de changer le mot de passe de
+// n'importe quel compte.
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseMultipartForm(10 << 20) // 10 MB max file size
-	if err != nil {
-		http.Error(w, "Erreur lors de l'analyse du formulaire multipart", http.StatusInternalServerError)
+	ctx := r.Context()
+
+	userID, ok := auth.MustUserID(w, r)
+	if !ok {
 		return
 	}
 
-	// Extraction des valeurs du formulaire
-	id := r.FormValue("id")
-	username := r.FormValue("username")
-	password := r.FormValue("password")
-	bannerFile, bannerHeader, _ := r.FormFile("banner")
-	profilePictureFile, profilePictureHeader, _ := r.FormFile("ProfilePicture")
+	r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
+	if err := r.ParseMultipartForm(maxUploadBytes); err != nil {
+		http.Error(w, "Formulaire invalide ou trop volumineux", http.StatusBadRequest)
+		return
+	}
+	defer r.MultipartForm.RemoveAll()
 
-	// Vérifier l'existence de l'utilisateur dans la base de données
-	client := db.Client
-	var result models.User
-	err = client.Database(db.DBName).Collection("User").FindOne(context.TODO(), bson.M{"id": id}).Decode(&result)
-	if err != nil {
-		http.Error(w, "Utilisateur non trouvé dans la base de données", http.StatusNotFound)
+	collection := db.Client.Database(db.DBName).Collection("User")
+	if err := collection.FindOne(ctx, bson.M{"id": userID}).Err(); err != nil {
+		http.Error(w, "Utilisateur non trouvé", http.StatusNotFound)
 		return
 	}
 
-	// Création de l'objet de mise à jour
 	update := bson.M{}
-	if username != "" {
-		update["username"] = username
-	}
-	if password != "" {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-		if err != nil {
-			http.Error(w, "Erreur lors du hachage du mot de passe", http.StatusInternalServerError)
+
+	if username := strings.TrimSpace(r.FormValue("username")); username != "" {
+		if len(username) > maxUsernameLen {
+			http.Error(w, "Nom d'utilisateur trop long", http.StatusBadRequest)
 			return
 		}
-		update["password"] = string(hashedPassword)
-	}
-	if bannerFile != nil {
-		defer bannerFile.Close()
-		bannerURL := UploadBanner(bannerFile, bannerHeader.Filename) // corrected function
-		update["banner"] = bannerURL
-	}
-	if profilePictureFile != nil {
-		defer profilePictureFile.Close()
-		profilePictureURL := UploadProfilPicture(profilePictureFile, profilePictureHeader.Filename) // corrected function
-		update["profilePicture"] = profilePictureURL
+		// Le nom d'utilisateur doit rester unique.
+		err := collection.FindOne(ctx, bson.M{"username": username, "id": bson.M{"$ne": userID}}).Err()
+		if err == nil {
+			http.Error(w, "Nom d'utilisateur déjà pris", http.StatusConflict)
+			return
+		}
+		if !errors.Is(err, mongo.ErrNoDocuments) {
+			log.Printf("UpdateUser: vérification d'unicité : %v", err)
+			http.Error(w, "Erreur interne", http.StatusInternalServerError)
+			return
+		}
+		update["username"] = username
 	}
 
-	// Effectuer la mise à jour
-	_, err = client.Database(db.DBName).Collection("User").UpdateOne(context.TODO(), bson.M{"id": id}, bson.M{"$set": update})
-	if err != nil {
-		http.Error(w, "Erreur lors de la mise à jour de l'utilisateur dans la base de données", http.StatusInternalServerError)
+	if password := r.FormValue("password"); password != "" {
+		if len(password) < minPasswordLen {
+			http.Error(w, "Le mot de passe doit contenir au moins 8 caractères", http.StatusBadRequest)
+			return
+		}
+		hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			log.Printf("UpdateUser: hachage : %v", err)
+			http.Error(w, "Erreur interne", http.StatusInternalServerError)
+			return
+		}
+		update["password"] = string(hashed)
+	}
+
+	if url, err := uploadFormImage(ctx, r, "banner", KindBanner, userID); err != nil {
+		respondUploadError(w, err)
+		return
+	} else if url != "" {
+		update["banner"] = url
+	}
+
+	if url, err := uploadFormImage(ctx, r, "ProfilePicture", KindProfilePicture, userID); err != nil {
+		respondUploadError(w, err)
+		return
+	} else if url != "" {
+		// Clé alignée sur le tag bson du modèle (voir models.User).
+		update["profilepicture"] = url
+	}
+
+	if len(update) == 0 {
+		http.Error(w, "Aucune modification fournie", http.StatusBadRequest)
 		return
 	}
 
-	// Envoyer une réponse de succès
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintln(w, "Profil mis à jour avec succès")
+	if _, err := collection.UpdateOne(ctx, bson.M{"id": userID}, bson.M{"$set": update}); err != nil {
+		log.Printf("UpdateUser: mise à jour : %v", err)
+		http.Error(w, "Erreur interne", http.StatusInternalServerError)
+		return
+	}
+
+	writeJSON(w, map[string]string{"message": "Profil mis à jour avec succès"})
 }
 
-func checkAuthorization(r *http.Request, username string) bool {
-	// Get the token from the request header
-	tokenString := r.Header.Get("Authorization")
-	if tokenString == "" {
-		return false
-	}
-
-	// Parse the token
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Check the signing method
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Méthode de signature invalide")
-		}
-
-		// Return the secret key
-		return []byte(os.Getenv("JWT_SECRET")), nil
-	})
-	if err != nil {
-		return false
-	}
-
-	// Check if the token is valid
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && err == nil {
-		if claims["username"] == username {
-			return true
-		}
-	}
-
-	return false
-}
+// GetUser renvoie le profil public d'un utilisateur.
 func GetUser(w http.ResponseWriter, r *http.Request) {
-	// Parse the request parameters
-	params := r.URL.Query()
-	userID := params.Get("id")
-
-	// Validate the user ID
+	userID := r.URL.Query().Get("id")
 	if userID == "" {
 		http.Error(w, "ID utilisateur manquant", http.StatusBadRequest)
 		return
 	}
 
-	// Retrieve the user document from the database
-	client := db.Client
 	var user models.User
-	err := client.Database(db.DBName).Collection("User").FindOne(context.TODO(), bson.M{"id": userID}).Decode(&user)
+	err := db.Client.Database(db.DBName).Collection("User").
+		FindOne(r.Context(), bson.M{"id": userID}).Decode(&user)
 	if err != nil {
-		http.Error(w, "Utilisateur non trouvé dans la base de données", http.StatusNotFound)
+		http.Error(w, "Utilisateur non trouvé", http.StatusNotFound)
 		return
 	}
-	// Remove the password field from the user data
+
 	user.Password = ""
-
-	// Send the user data in the response
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
+	writeJSON(w, user)
 }
 
-func GetUserProfilPage(w http.ResponseWriter, r *http.Request) {
-	// Parse the request parameters
-	params := r.URL.Query()
-	userID := params.Get("id")
+// UpdateUserChapter enregistre un chapitre lu dans l'historique.
+func UpdateUserChapter(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 
-	// Validate the user ID
-	if userID == "" {
-		http.Error(w, "ID utilisateur manquant", http.StatusBadRequest)
+	userID, ok := auth.MustUserID(w, r)
+	if !ok {
 		return
 	}
-
-}
-
-func UpdateUserChapter(w http.ResponseWriter, r *http.Request) {
-	client := db.Client
 
 	var params struct {
-		UserId    string `json:"userId"`
 		MangaId   string `json:"mangaId"`
 		ChapterId string `json:"chapterId"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-		http.Error(w, fmt.Sprintf("Error reading request body: %v", err), http.StatusBadRequest)
+		http.Error(w, "Corps de requête illisible", http.StatusBadRequest)
 		return
 	}
-	collection := client.Database(db.DBName).Collection("User")
-
-	// Filtre pour identifier l'utilisateur
-	filter := bson.M{"id": params.UserId, "mangas.mangaId": params.MangaId}
-
-	// Mise à jour pour ajouter un chapitre au manga existant, en s'assurant qu'il n'y a pas de doublon
-	updateChapter := bson.M{
-		"$addToSet": bson.M{
-			"mangas.$[elem].chapters": params.ChapterId, // Utilisez $[elem] pour référencer le filtre d'array
-		},
+	if params.MangaId == "" || params.ChapterId == "" {
+		http.Error(w, "mangaId et chapterId sont requis", http.StatusBadRequest)
+		return
 	}
 
-	// Options pour effectuer la mise à jour seulement si le manga existe
-	opts := options.Update().SetArrayFilters(options.ArrayFilters{
-		Filters: []interface{}{bson.M{"elem.mangaId": params.MangaId}}, // Assurez-vous que c'est correctement configuré
-	})
+	collection := db.Client.Database(db.DBName).Collection("User")
 
-	// Tenter d'ajouter le chapitre
-	result, err := collection.UpdateOne(context.TODO(), filter, updateChapter, opts)
+	// Cas 1 : le manga figure déjà dans l'historique, on y ajoute le chapitre.
+	res, err := collection.UpdateOne(ctx,
+		bson.M{"id": userID, "mangas.mangaId": params.MangaId},
+		bson.M{"$addToSet": bson.M{"mangas.$.chapters": params.ChapterId}},
+	)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to update chapter: %v", err), http.StatusInternalServerError)
+		log.Printf("UpdateUserChapter: ajout du chapitre : %v", err)
+		http.Error(w, "Erreur interne", http.StatusInternalServerError)
 		return
 	}
 
-	if result.MatchedCount == 0 {
-		// Ajout d'un nouveau manga et chapitre
-		// Filtre pour identifier l'utilisateur
-		filter := bson.M{"id": params.UserId}
-
-		// Mise à jour pour ajouter un nouveau manga à la liste des mangas
-		updateManga := bson.M{
-			"$push": bson.M{
-				"mangas": bson.M{
-					"mangaId":  params.MangaId,
-					"chapters": []string{params.ChapterId},
-				},
-			},
-		}
-
-		// Exécution de l'opération de mise à jour
-		_, err = collection.UpdateOne(context.TODO(), filter, updateManga)
+	// Cas 2 : premier chapitre lu pour ce manga.
+	if res.MatchedCount == 0 {
+		_, err := collection.UpdateOne(ctx,
+			bson.M{"id": userID},
+			bson.M{"$push": bson.M{"mangas": models.MangaUser{
+				MangaId:  params.MangaId,
+				Chapters: []string{params.ChapterId},
+			}}},
+		)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Failed to add new manga: %v", err), http.StatusInternalServerError)
+			log.Printf("UpdateUserChapter: ajout du manga : %v", err)
+			http.Error(w, "Erreur interne", http.StatusInternalServerError)
 			return
 		}
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Manga and/or chapter updated successfully"))
-
+	writeJSON(w, map[string]string{"message": "Historique mis à jour"})
 }
 
-func UpdateUserFollow(w http.ResponseWriter, r *http.Request) {
-	client := db.Client
+// FollowManga ajoute un manga à la liste des titres suivis.
+func FollowManga(w http.ResponseWriter, r *http.Request) {
+	setFollow(w, r, true)
+}
+
+// UnfollowManga retire un manga de la liste des titres suivis.
+//
+// Cette route manquait : le front l'appelait déjà et recevait un 404 muet,
+// laissant l'interface afficher un désabonnement qui n'avait pas eu lieu.
+func UnfollowManga(w http.ResponseWriter, r *http.Request) {
+	setFollow(w, r, false)
+}
+
+// setFollow applique une opération explicite plutôt qu'une bascule déduite du
+// nombre de documents modifiés, qui se désynchronisait de l'interface.
+func setFollow(w http.ResponseWriter, r *http.Request, follow bool) {
+	ctx := r.Context()
+
+	userID, ok := auth.MustUserID(w, r)
+	if !ok {
+		return
+	}
 
 	var params struct {
-		UserId  string `json:"userId"`
 		MangaId string `json:"mangaId"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-		http.Error(w, fmt.Sprintf("Error reading request body: %v", err), http.StatusBadRequest)
+		http.Error(w, "Corps de requête illisible", http.StatusBadRequest)
+		return
+	}
+	if params.MangaId == "" {
+		http.Error(w, "mangaId est requis", http.StatusBadRequest)
 		return
 	}
 
-	// This filter checks for the user.
-	filter := bson.M{"id": params.UserId}
-	// This update tries to add the manga to the user's list if it doesn't exist.
-	update := bson.M{
-		"$addToSet": bson.M{"followedMangas": params.MangaId},
-	}
-
-	collection := client.Database(db.DBName).Collection("User")
-	result, err := collection.UpdateOne(context.TODO(), filter, update, options.Update().SetUpsert(true))
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to update user follow list: %v", err), http.StatusInternalServerError)
-		return
-	}
-	if result.ModifiedCount == 0 {
-		// The manga was already in the user's follow list delete it instead.
-		update = bson.M{
-			"$pull": bson.M{"followedMangas": params.MangaId},
-		}
-		_, err = collection.UpdateOne(context.TODO(), filter, update)
+	// Ne pas permettre de suivre un titre exclu par le filtre de contenu.
+	if follow {
+		allowed, err := isMangaAllowed(ctx, params.MangaId)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Failed to remove manga from user follow list: %v", err), http.StatusInternalServerError)
+			log.Printf("setFollow: contrôle du contenu : %v", err)
+			http.Error(w, "Manga indisponible", http.StatusBadGateway)
+			return
+		}
+		if !allowed {
+			http.Error(w, "Manga introuvable", http.StatusNotFound)
 			return
 		}
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Manga followed successfully"))
+	var update bson.M
+	if follow {
+		update = bson.M{"$addToSet": bson.M{"followedMangas": params.MangaId}}
+	} else {
+		update = bson.M{"$pull": bson.M{"followedMangas": params.MangaId}}
+	}
+
+	// Pas d'upsert : sans utilisateur correspondant, l'upsert créait un
+	// document fantôme dépourvu de mot de passe.
+	res, err := db.Client.Database(db.DBName).Collection("User").
+		UpdateOne(ctx, bson.M{"id": userID}, update)
+	if err != nil {
+		log.Printf("setFollow: mise à jour : %v", err)
+		http.Error(w, "Erreur interne", http.StatusInternalServerError)
+		return
+	}
+	if res.MatchedCount == 0 {
+		http.Error(w, "Utilisateur non trouvé", http.StatusNotFound)
+		return
+	}
+
+	writeJSON(w, map[string]bool{"following": follow})
 }

@@ -60,7 +60,7 @@ const ChapterList = ({ mangaDetails }) => {
       {/* Liste des chapitres avec SCROLLING */}
       <div className="max-h-[500px] w-full overflow-y-auto scrollbar-hide mt-4">
         <div className="space-y-2">
-          {displayedChapters.map((chapter, index) => (
+          {displayedChapters.map((chapter) => (
             <div
               key={chapter.id}
               className="flex justify-between items-center bg-gray-800 hover:bg-gray-700 px-4 py-3 rounded-md cursor-pointer transition"

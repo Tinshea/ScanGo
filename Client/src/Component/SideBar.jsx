@@ -6,8 +6,14 @@ const Sidebar = ({ mangaDetails }) => {
   let navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false); // La sidebar est FERMÉE par défaut
 
+  const chapters = mangaDetails?.chapters ?? [];
+
   const handleMangaClick = () => {
-    navigate(`/manga/${mangaDetails.id}`);
+    if (mangaDetails?.id) {
+      navigate(`/manga/${mangaDetails.id}`);
+    } else {
+      navigate("/");
+    }
   };
 
   return (
@@ -45,27 +51,31 @@ const Sidebar = ({ mangaDetails }) => {
           </button>
         </div>
 
-        {/* Sélecteur de fournisseur */}
-        <select className="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white mb-4">
-          <option value="mangasee">Mangasee</option>
-        </select>
+        {/* Le sélecteur de fournisseur a été retiré : il ne proposait qu'une
+            seule option et n'était relié à aucun comportement. */}
 
         {/* Liste des chapitres avec un scroll propre */}
         <nav className="flex-1 overflow-y-auto max-h-[80vh]">
           <h2 className="text-lg font-semibold mb-2">Chapitres</h2>
-          <ul className="space-y-2">
-            {mangaDetails.chapters.map((chapter, index) => (
-              <li key={index} className="border-b border-gray-700 pb-2">
-                <Link
-                  to={`/chapter/${chapter.id}`}
-                  state={{ mangaDetails: mangaDetails }}
-                  className="block p-3 rounded-md bg-gray-800 hover:bg-gray-700 transition duration-300 shadow-sm"
-                >
-                  Chapitre {chapter.attributes.chapter}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {/* mangaDetails.chapters était parcouru sans garde : arriver
+              directement sur l'URL d'un chapitre plantait le composant. */}
+          {chapters.length === 0 ? (
+            <p className="text-gray-400 text-sm">Aucun chapitre disponible.</p>
+          ) : (
+            <ul className="space-y-2">
+              {chapters.map((chapter) => (
+                <li key={chapter.id} className="border-b border-gray-700 pb-2">
+                  <Link
+                    to={`/chapter/${chapter.id}`}
+                    state={{ mangaDetails }}
+                    className="block p-3 rounded-md bg-gray-800 hover:bg-gray-700 transition duration-300 shadow-sm"
+                  >
+                    Chapitre {chapter.attributes?.chapter ?? "—"}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </nav>
       </aside>
     </>

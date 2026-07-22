@@ -1,35 +1,50 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import MangaDetails from "./Component/MangaDetails"; 
-import Chapter from './Component/Chapter'; // Ce composant doit être capable d'afficher les détails d'un chapitre spécifique
-import './App.css';
-import ProfilePage from './Component/ProfilePage';
-import Home from './Component/Home';
-import Navbar from './Component/Navbar'; // Import the Navbar component
-import EditProfile from './Component/EditProfile';
-import ShowSearch from './Component/ShowSearch';
-import ShowTag from './Component/ShowTag';
-import Chatbot from './Component/Chatbot';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import MangaDetails from "./Component/MangaDetails";
+import Chapter from "./Component/Chapter";
+import "./App.css";
+import ProfilePage from "./Component/ProfilePage";
+import Home from "./Component/Home";
+import Navbar from "./Component/Navbar";
+import EditProfile from "./Component/EditProfile";
+import ShowSearch from "./Component/ShowSearch";
+import ShowTag from "./Component/ShowTag";
+import ProtectedRoute from "./Component/ProtectedRoute";
+import NotFound from "./Component/NotFound";
 
 function App() {
-
   return (
     <Router>
       <div className="App">
-        <Navbar /> 
+        <Navbar />
         <Routes>
-          <Route path="/" element={
-            <div className="app-container">
-              <Home />
-            </div>
-          } />
-          <Route path="/EditProfil/:id" element={<EditProfile />} />
+          <Route
+            path="/"
+            element={
+              <div className="app-container">
+                <Home />
+              </div>
+            }
+          />
+
+          {/* L'édition de profil n'est accessible qu'à son propriétaire. */}
+          <Route
+            path="/EditProfil/:id"
+            element={
+              <ProtectedRoute requireSelf>
+                <EditProfile />
+              </ProtectedRoute>
+            }
+          />
+
           <Route path="/manga/:id" element={<MangaDetails />} />
-          <Route path="/chapter/:chapterId" element={<Chapter/>} /> 
+          <Route path="/chapter/:chapterId" element={<Chapter />} />
           <Route path="/User/:id" element={<ProfilePage />} />
           <Route path="/search/:query" element={<ShowSearch />} />
           <Route path="/tag/:query" element={<ShowTag />} />
+
+          {/* Toute autre URL affiche une page dédiée plutôt qu'un écran vide. */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
-        <Chatbot />
       </div>
     </Router>
   );

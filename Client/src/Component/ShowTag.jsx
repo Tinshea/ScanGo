@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Manga from "./Manga";
-import LoadingComponent from "./LoadingComponent";
+import { SkeletonGrid } from "./Skeleton";
 import Pagination from "./Pagination";
 import api, { messageFromError } from "../api";
 
@@ -50,9 +50,8 @@ const ShowTag = () => {
     };
   }, [offset, query]);
 
-  if (!mangaList && !error) {
-    return <LoadingComponent />;
-  }
+  // Le nom du genre reste affiché pendant le chargement.
+  const isLoading = !mangaList && !error;
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
@@ -70,7 +69,9 @@ const ShowTag = () => {
 
       {error && <p className="text-red-400 text-center mb-6">{error}</p>}
 
-      {!error && mangaList.length === 0 ? (
+      {isLoading ? (
+        <SkeletonGrid count={PAGE_SIZE} />
+      ) : !error && mangaList.length === 0 ? (
         <div className="text-center text-gray-400">
           <p>Aucun titre dans ce genre.</p>
           <button
@@ -82,7 +83,7 @@ const ShowTag = () => {
         </div>
       ) : (
         <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {mangaList.map((manga) => (
+          {mangaList?.map((manga) => (
             <Manga key={manga.id} mangaData={manga} />
           ))}
         </ul>

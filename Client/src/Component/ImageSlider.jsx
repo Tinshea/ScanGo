@@ -2,19 +2,17 @@ import { Carousel } from 'react-responsive-carousel';
 import { useNavigate } from 'react-router-dom';
 import '../Css/ImageSlider.css';
 import "react-responsive-carousel/lib/styles/carousel.min.css";
-import LoadingComponent from './LoadingComponent';
+import { SkeletonBanner } from './Skeleton';
 
 const MAX_DESCRIPTION_LENGTH = 200; // Nombre max de caractères avant de tronquer
 
 const ImageSlider = ({ mangaList }) => {
   let navigate = useNavigate();
 
+  // Bloc de la hauteur exacte du carrousel : la bannière ne surgit plus en
+  // repoussant tout le contenu situé en dessous.
   if (!mangaList) {
-    return (
-      <div>
-        <LoadingComponent />
-      </div>
-    );
+    return <SkeletonBanner />;
   }
 
   const handleMangaClick = (id) => {

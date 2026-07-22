@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import Manga from "./Manga";
-import LoadingComponent from "./LoadingComponent";
+import { SkeletonRow } from "./Skeleton";
 
 // DisplayList affiche une rangée de mangas défilant horizontalement.
 //
@@ -14,11 +14,16 @@ import LoadingComponent from "./LoadingComponent";
 // celle-ci ne défile pas automatiquement, les nouveaux titres arrivaient hors
 // écran et le clic paraissait sans effet.
 const DisplayList = ({ title, mangaList, section }) => {
+  // L'état de chargement conserve la structure définitive : même conteneur,
+  // même en-tête, même hauteur de rangée. Le titre reste lisible au lieu de
+  // laisser une page vide, et rien ne bouge quand les données arrivent.
   if (!mangaList) {
     return (
-      <div>
-        <h1 className="Sectiontitle">{title}</h1>
-        <LoadingComponent />
+      <div className="Mangalist-conteneur">
+        <div className="Mangalist-header">
+          <h1 className="font-extrabold Sectiontitle">{title}</h1>
+        </div>
+        <SkeletonRow />
       </div>
     );
   }

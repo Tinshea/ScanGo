@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Manga from "./Manga";
-import LoadingComponent from "./LoadingComponent";
+import { SkeletonGrid } from "./Skeleton";
 import Pagination from "./Pagination";
 import NotFound from "./NotFound";
 import api, { messageFromError } from "../api";
@@ -69,9 +69,9 @@ const Browse = () => {
     return <NotFound />;
   }
 
-  if (!mangaList && !error) {
-    return <LoadingComponent />;
-  }
+  // Le titre et la pagination restent en place pendant le chargement : la
+  // page ne se vide plus entre deux pages de résultats.
+  const isLoading = !mangaList && !error;
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
@@ -93,7 +93,9 @@ const Browse = () => {
 
       {error && <p className="text-red-400 text-center mb-6">{error}</p>}
 
-      {!error && mangaList.length === 0 ? (
+      {isLoading ? (
+        <SkeletonGrid count={PAGE_SIZE} />
+      ) : !error && mangaList.length === 0 ? (
         <div className="text-center text-gray-400">
           <p>Aucun titre à afficher.</p>
           <button
@@ -105,7 +107,7 @@ const Browse = () => {
         </div>
       ) : (
         <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {mangaList.map((manga) => (
+          {mangaList?.map((manga) => (
             <Manga key={manga.id} mangaData={manga} />
           ))}
         </ul>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Manga from "./Manga";
-import LoadingComponent from "./LoadingComponent";
+import { SkeletonGrid } from "./Skeleton";
 import Pagination from "./Pagination";
 import api, { messageFromError } from "../api";
 
@@ -47,9 +47,8 @@ const ShowSearch = () => {
     };
   }, [offset, query]);
 
-  if (!mangaList && !error) {
-    return <LoadingComponent />;
-  }
+  // Le champ de recherche et le titre restent affichés pendant le chargement.
+  const isLoading = !mangaList && !error;
 
   const handleSearch = () => {
     const term = searchValue.trim();
@@ -87,13 +86,15 @@ const ShowSearch = () => {
 
       {error && <p className="text-red-400 text-center mb-6">{error}</p>}
 
-      {!error && mangaList.length === 0 ? (
+      {isLoading ? (
+        <SkeletonGrid count={PAGE_SIZE} />
+      ) : !error && mangaList.length === 0 ? (
         <p className="text-center text-gray-400">
           Aucun résultat pour cette recherche.
         </p>
       ) : (
         <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {mangaList.map((manga) => (
+          {mangaList?.map((manga) => (
             <Manga key={manga.id} mangaData={manga} />
           ))}
         </ul>

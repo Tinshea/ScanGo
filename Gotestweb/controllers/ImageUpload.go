@@ -149,9 +149,9 @@ func respondUploadError(w http.ResponseWriter, err error) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	case errors.Is(err, ErrUploadDisabled):
 		log.Printf("Upload refusé : %v", err)
-		http.Error(w, "Upload d'images temporairement indisponible", http.StatusServiceUnavailable)
+		http.Error(w, "Image upload temporarily unavailable", http.StatusServiceUnavailable)
 	default:
 		log.Printf("Échec de l'upload : %v", err)
-		http.Error(w, "Échec de l'envoi de l'image", http.StatusBadGateway)
+		http.Error(w, "Image upload failed", http.StatusBadGateway)
 	}
 }

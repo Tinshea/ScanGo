@@ -37,7 +37,7 @@ func HandleComment(w http.ResponseWriter, r *http.Request) {
 		GetChapterComments(w, r)
 	default:
 		w.Header().Set("Allow", "GET, POST, DELETE")
-		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -58,21 +58,21 @@ func PostComment(w http.ResponseWriter, r *http.Request) {
 		Text      string `json:"text"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Corps de requête illisible", http.StatusBadRequest)
+		http.Error(w, "Malformed request body", http.StatusBadRequest)
 		return
 	}
 
 	text := strings.TrimSpace(input.Text)
 	if text == "" {
-		http.Error(w, "Le commentaire ne peut pas être vide", http.StatusBadRequest)
+		http.Error(w, "The comment cannot be empty", http.StatusBadRequest)
 		return
 	}
 	if len(text) > maxCommentLen {
-		http.Error(w, "Commentaire trop long (2000 caractères maximum)", http.StatusBadRequest)
+		http.Error(w, "Comment too long (2000 characters maximum)", http.StatusBadRequest)
 		return
 	}
 	if input.ChapterID == "" {
-		http.Error(w, "chapterId est requis", http.StatusBadRequest)
+		http.Error(w, "chapterId is required", http.StatusBadRequest)
 		return
 	}
 
@@ -88,7 +88,7 @@ func PostComment(w http.ResponseWriter, r *http.Request) {
 	_, err := db.Client.Database(db.DBName).Collection("Comments").InsertOne(ctx, comment)
 	if err != nil {
 		log.Printf("PostComment: insertion : %v", err)
-		http.Error(w, "Erreur interne", http.StatusInternalServerError)
+		http.Error(w, "Internal error", http.StatusInternalServerError)
 		return
 	}
 
@@ -107,7 +107,7 @@ func DeleteComment(w http.ResponseWriter, r *http.Request) {
 
 	id := r.URL.Query().Get("id")
 	if id == "" {
-		http.Error(w, "id est requis", http.StatusBadRequest)
+		http.Error(w, "id is required", http.StatusBadRequest)
 		return
 	}
 
@@ -117,13 +117,13 @@ func DeleteComment(w http.ResponseWriter, r *http.Request) {
 		DeleteOne(ctx, bson.M{"id": id, "userid": userID})
 	if err != nil {
 		log.Printf("DeleteComment: suppression : %v", err)
-		http.Error(w, "Erreur interne", http.StatusInternalServerError)
+		http.Error(w, "Internal error", http.StatusInternalServerError)
 		return
 	}
 	if res.DeletedCount == 0 {
 		// Même réponse que le commentaire inexistant : ne pas révéler
 		// l'existence d'un commentaire appartenant à autrui.
-		http.Error(w, "Commentaire introuvable", http.StatusNotFound)
+		http.Error(w, "Comment not found", http.StatusNotFound)
 		return
 	}
 
@@ -134,7 +134,7 @@ func DeleteComment(w http.ResponseWriter, r *http.Request) {
 func GetUserComments(w http.ResponseWriter, r *http.Request) {
 	userID := r.URL.Query().Get("userId")
 	if userID == "" {
-		http.Error(w, "userId est requis", http.StatusBadRequest)
+		http.Error(w, "userId is required", http.StatusBadRequest)
 		return
 	}
 	findComments(w, r, bson.M{"userid": userID})
@@ -144,7 +144,7 @@ func GetUserComments(w http.ResponseWriter, r *http.Request) {
 func GetChapterComments(w http.ResponseWriter, r *http.Request) {
 	chapterID := r.URL.Query().Get("chapterId")
 	if chapterID == "" {
-		http.Error(w, "chapterId est requis", http.StatusBadRequest)
+		http.Error(w, "chapterId is required", http.StatusBadRequest)
 		return
 	}
 	findComments(w, r, bson.M{"chapterid": chapterID})
@@ -162,7 +162,7 @@ func findComments(w http.ResponseWriter, r *http.Request, filter bson.M) {
 	cursor, err := db.Client.Database(db.DBName).Collection("Comments").Find(ctx, filter, opts)
 	if err != nil {
 		log.Printf("findComments: recherche : %v", err)
-		http.Error(w, "Erreur interne", http.StatusInternalServerError)
+		http.Error(w, "Internal error", http.StatusInternalServerError)
 		return
 	}
 	defer cursor.Close(ctx)
@@ -172,7 +172,7 @@ func findComments(w http.ResponseWriter, r *http.Request, filter bson.M) {
 	comments := make([]models.Comment, 0)
 	if err := cursor.All(ctx, &comments); err != nil {
 		log.Printf("findComments: lecture : %v", err)
-		http.Error(w, "Erreur interne", http.StatusInternalServerError)
+		http.Error(w, "Internal error", http.StatusInternalServerError)
 		return
 	}
 

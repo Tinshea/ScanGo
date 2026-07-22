@@ -24,6 +24,9 @@ const Browse = () => {
   const [offset, setOffset] = useState(0);
   const [mangaList, setMangaList] = useState(null);
   const [total, setTotal] = useState(0);
+  // Nombre de resultats reellement paginables. MangaDex refuse offset + limit
+  // au-dela de 10000, ce qui rendait 81 % des pages annoncees inaccessibles.
+  const [reachable, setReachable] = useState(0);
   const [error, setError] = useState("");
 
   const meta = SECTIONS[section];
@@ -45,6 +48,7 @@ const Browse = () => {
         if (cancelled) return;
         setMangaList(res.data.Mangalist || []);
         setTotal(res.data.Total || 0);
+        setReachable(res.data.Reachable ?? res.data.Total ?? 0);
       } catch (err) {
         if (!cancelled) {
           setError(messageFromError(err, "Could not load this section."));
@@ -62,7 +66,8 @@ const Browse = () => {
   if (!meta) return <NotFound />;
 
   const isLoading = !mangaList && !error;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(reachable / PAGE_SIZE));
+  const isCapped = total > reachable;
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
 
   const changePage = (nextOffset) => {
@@ -75,7 +80,7 @@ const Browse = () => {
       <Seo
         title={meta.title}
         path={`/browse/${section}`}
-        description={`${meta.subtitle} on MangaGo. Browse ${total > 0 ? total.toLocaleString("en-US") : "des milliers de"} titres.`}
+        description={`${meta.subtitle} on MangaGo. Browse ${total > 0 ? total.toLocaleString("en-US") : "thousands of"} titles.`}
       />
 
       {/* En-tête aligné à gauche plutôt que centré : la lecture d'un catalogue
@@ -85,7 +90,15 @@ const Browse = () => {
         <h1 className="text-3xl text-ink-050 md:text-4xl">{meta.title}</h1>
         <p className="mt-2 text-sm text-ink-400">
           {meta.subtitle}
-          {total > 0 && ` · ${total.toLocaleString("en-US")} titres`}
+          {total > 0 && ` · ${total.toLocaleString("en-US")} titles`}
+          {/* MangaDex ne sert pas au-delà du dix millième résultat. Le
+              catalogue complet reste annoncé, mais la part réellement
+              parcourable est indiquée plutôt que promise en silence. */}
+          {isCapped && (
+            <span className="ml-1 text-ink-500">
+              (first {reachable.toLocaleString("en-US")} browsable)
+            </span>
+          )}
         </p>
       </header>
 

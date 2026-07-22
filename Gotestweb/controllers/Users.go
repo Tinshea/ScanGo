@@ -46,21 +46,21 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 
 	var creds credentials
 	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
-		http.Error(w, "Corps de requête illisible", http.StatusBadRequest)
+		http.Error(w, "Malformed request body", http.StatusBadRequest)
 		return
 	}
 
 	username := strings.TrimSpace(creds.Username)
 	if username == "" || creds.Password == "" {
-		http.Error(w, "Nom d'utilisateur ou mot de passe manquant", http.StatusBadRequest)
+		http.Error(w, "Missing username or password", http.StatusBadRequest)
 		return
 	}
 	if len(username) > maxUsernameLen {
-		http.Error(w, "Nom d'utilisateur trop long", http.StatusBadRequest)
+		http.Error(w, "Username too long", http.StatusBadRequest)
 		return
 	}
 	if len(creds.Password) < minPasswordLen {
-		http.Error(w, "Le mot de passe doit contenir au moins 8 caractères", http.StatusBadRequest)
+		http.Error(w, "Password must be at least 8 characters", http.StatusBadRequest)
 		return
 	}
 
@@ -71,18 +71,18 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	err := collection.FindOne(ctx, bson.M{"username": username}).Err()
 	switch {
 	case err == nil:
-		http.Error(w, "Nom d'utilisateur déjà pris", http.StatusConflict)
+		http.Error(w, "Username already taken", http.StatusConflict)
 		return
 	case !errors.Is(err, mongo.ErrNoDocuments):
 		log.Printf("SignUp: recherche de l'utilisateur : %v", err)
-		http.Error(w, "Erreur interne", http.StatusInternalServerError)
+		http.Error(w, "Internal error", http.StatusInternalServerError)
 		return
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(creds.Password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("SignUp: hachage : %v", err)
-		http.Error(w, "Erreur interne", http.StatusInternalServerError)
+		http.Error(w, "Internal error", http.StatusInternalServerError)
 		return
 	}
 
@@ -99,14 +99,14 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 
 	if _, err := collection.InsertOne(ctx, newUser); err != nil {
 		log.Printf("SignUp: insertion : %v", err)
-		http.Error(w, "Erreur interne", http.StatusInternalServerError)
+		http.Error(w, "Internal error", http.StatusInternalServerError)
 		return
 	}
 
 	token, err := auth.GenerateToken(newUser.ID)
 	if err != nil {
 		log.Printf("SignUp: génération du jeton : %v", err)
-		http.Error(w, "Erreur interne", http.StatusInternalServerError)
+		http.Error(w, "Internal error", http.StatusInternalServerError)
 		return
 	}
 
@@ -126,11 +126,11 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 
 	var creds credentials
 	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
-		http.Error(w, "Corps de requête illisible", http.StatusBadRequest)
+		http.Error(w, "Malformed request body", http.StatusBadRequest)
 		return
 	}
 	if creds.Username == "" || creds.Password == "" {
-		http.Error(w, "Nom d'utilisateur ou mot de passe manquant", http.StatusBadRequest)
+		http.Error(w, "Missing username or password", http.StatusBadRequest)
 		return
 	}
 
@@ -139,26 +139,26 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 		FindOne(ctx, bson.M{"username": strings.TrimSpace(creds.Username)}).Decode(&user)
 	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
 		log.Printf("SignIn: recherche : %v", err)
-		http.Error(w, "Erreur interne", http.StatusInternalServerError)
+		http.Error(w, "Internal error", http.StatusInternalServerError)
 		return
 	}
 
 	// Même message et même statut que le mot de passe erroné, pour ne pas
 	// révéler quels noms d'utilisateur existent.
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		http.Error(w, "Nom d'utilisateur ou mot de passe incorrect", http.StatusUnauthorized)
+		http.Error(w, "Incorrect username or password", http.StatusUnauthorized)
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(creds.Password)); err != nil {
-		http.Error(w, "Nom d'utilisateur ou mot de passe incorrect", http.StatusUnauthorized)
+		http.Error(w, "Incorrect username or password", http.StatusUnauthorized)
 		return
 	}
 
 	token, err := auth.GenerateToken(user.ID)
 	if err != nil {
 		log.Printf("SignIn: génération du jeton : %v", err)
-		http.Error(w, "Erreur interne", http.StatusInternalServerError)
+		http.Error(w, "Internal error", http.StatusInternalServerError)
 		return
 	}
 
@@ -185,14 +185,14 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
 	if err := r.ParseMultipartForm(maxUploadBytes); err != nil {
-		http.Error(w, "Formulaire invalide ou trop volumineux", http.StatusBadRequest)
+		http.Error(w, "Invalid or oversized form", http.StatusBadRequest)
 		return
 	}
 	defer r.MultipartForm.RemoveAll()
 
 	collection := db.Client.Database(db.DBName).Collection("User")
 	if err := collection.FindOne(ctx, bson.M{"id": userID}).Err(); err != nil {
-		http.Error(w, "Utilisateur non trouvé", http.StatusNotFound)
+		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 
@@ -200,18 +200,18 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	if username := strings.TrimSpace(r.FormValue("username")); username != "" {
 		if len(username) > maxUsernameLen {
-			http.Error(w, "Nom d'utilisateur trop long", http.StatusBadRequest)
+			http.Error(w, "Username too long", http.StatusBadRequest)
 			return
 		}
 		// Le nom d'utilisateur doit rester unique.
 		err := collection.FindOne(ctx, bson.M{"username": username, "id": bson.M{"$ne": userID}}).Err()
 		if err == nil {
-			http.Error(w, "Nom d'utilisateur déjà pris", http.StatusConflict)
+			http.Error(w, "Username already taken", http.StatusConflict)
 			return
 		}
 		if !errors.Is(err, mongo.ErrNoDocuments) {
 			log.Printf("UpdateUser: vérification d'unicité : %v", err)
-			http.Error(w, "Erreur interne", http.StatusInternalServerError)
+			http.Error(w, "Internal error", http.StatusInternalServerError)
 			return
 		}
 		update["username"] = username
@@ -219,13 +219,13 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	if password := r.FormValue("password"); password != "" {
 		if len(password) < minPasswordLen {
-			http.Error(w, "Le mot de passe doit contenir au moins 8 caractères", http.StatusBadRequest)
+			http.Error(w, "Password must be at least 8 characters", http.StatusBadRequest)
 			return
 		}
 		hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		if err != nil {
 			log.Printf("UpdateUser: hachage : %v", err)
-			http.Error(w, "Erreur interne", http.StatusInternalServerError)
+			http.Error(w, "Internal error", http.StatusInternalServerError)
 			return
 		}
 		update["password"] = string(hashed)
@@ -247,24 +247,24 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(update) == 0 {
-		http.Error(w, "Aucune modification fournie", http.StatusBadRequest)
+		http.Error(w, "No changes provided", http.StatusBadRequest)
 		return
 	}
 
 	if _, err := collection.UpdateOne(ctx, bson.M{"id": userID}, bson.M{"$set": update}); err != nil {
 		log.Printf("UpdateUser: mise à jour : %v", err)
-		http.Error(w, "Erreur interne", http.StatusInternalServerError)
+		http.Error(w, "Internal error", http.StatusInternalServerError)
 		return
 	}
 
-	writeJSON(w, map[string]string{"message": "Profil mis à jour avec succès"})
+	writeJSON(w, map[string]string{"message": "Profile updated"})
 }
 
 // GetUser renvoie le profil public d'un utilisateur.
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	userID := r.URL.Query().Get("id")
 	if userID == "" {
-		http.Error(w, "ID utilisateur manquant", http.StatusBadRequest)
+		http.Error(w, "Missing user id", http.StatusBadRequest)
 		return
 	}
 
@@ -272,7 +272,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	err := db.Client.Database(db.DBName).Collection("User").
 		FindOne(r.Context(), bson.M{"id": userID}).Decode(&user)
 	if err != nil {
-		http.Error(w, "Utilisateur non trouvé", http.StatusNotFound)
+		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 
@@ -294,11 +294,11 @@ func UpdateUserChapter(w http.ResponseWriter, r *http.Request) {
 		ChapterId string `json:"chapterId"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-		http.Error(w, "Corps de requête illisible", http.StatusBadRequest)
+		http.Error(w, "Malformed request body", http.StatusBadRequest)
 		return
 	}
 	if params.MangaId == "" || params.ChapterId == "" {
-		http.Error(w, "mangaId et chapterId sont requis", http.StatusBadRequest)
+		http.Error(w, "mangaId and chapterId are required", http.StatusBadRequest)
 		return
 	}
 
@@ -311,7 +311,7 @@ func UpdateUserChapter(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		log.Printf("UpdateUserChapter: ajout du chapitre : %v", err)
-		http.Error(w, "Erreur interne", http.StatusInternalServerError)
+		http.Error(w, "Internal error", http.StatusInternalServerError)
 		return
 	}
 
@@ -326,12 +326,12 @@ func UpdateUserChapter(w http.ResponseWriter, r *http.Request) {
 		)
 		if err != nil {
 			log.Printf("UpdateUserChapter: ajout du manga : %v", err)
-			http.Error(w, "Erreur interne", http.StatusInternalServerError)
+			http.Error(w, "Internal error", http.StatusInternalServerError)
 			return
 		}
 	}
 
-	writeJSON(w, map[string]string{"message": "Historique mis à jour"})
+	writeJSON(w, map[string]string{"message": "Reading history updated"})
 }
 
 // FollowManga ajoute un manga à la liste des titres suivis.
@@ -361,11 +361,11 @@ func setFollow(w http.ResponseWriter, r *http.Request, follow bool) {
 		MangaId string `json:"mangaId"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-		http.Error(w, "Corps de requête illisible", http.StatusBadRequest)
+		http.Error(w, "Malformed request body", http.StatusBadRequest)
 		return
 	}
 	if params.MangaId == "" {
-		http.Error(w, "mangaId est requis", http.StatusBadRequest)
+		http.Error(w, "mangaId is required", http.StatusBadRequest)
 		return
 	}
 
@@ -374,11 +374,11 @@ func setFollow(w http.ResponseWriter, r *http.Request, follow bool) {
 		allowed, err := isMangaAllowed(ctx, params.MangaId)
 		if err != nil {
 			log.Printf("setFollow: contrôle du contenu : %v", err)
-			http.Error(w, "Manga indisponible", http.StatusBadGateway)
+			http.Error(w, "Title unavailable", http.StatusBadGateway)
 			return
 		}
 		if !allowed {
-			http.Error(w, "Manga introuvable", http.StatusNotFound)
+			http.Error(w, "Title not found", http.StatusNotFound)
 			return
 		}
 	}
@@ -396,11 +396,11 @@ func setFollow(w http.ResponseWriter, r *http.Request, follow bool) {
 		UpdateOne(ctx, bson.M{"id": userID}, update)
 	if err != nil {
 		log.Printf("setFollow: mise à jour : %v", err)
-		http.Error(w, "Erreur interne", http.StatusInternalServerError)
+		http.Error(w, "Internal error", http.StatusInternalServerError)
 		return
 	}
 	if res.MatchedCount == 0 {
-		http.Error(w, "Utilisateur non trouvé", http.StatusNotFound)
+		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 

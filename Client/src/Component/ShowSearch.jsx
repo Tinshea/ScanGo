@@ -14,6 +14,9 @@ const ShowSearch = () => {
   const [offset, setOffset] = useState(0);
   const [mangaList, setMangaList] = useState(null);
   const [total, setTotal] = useState(0);
+  // Nombre de resultats reellement paginables. MangaDex refuse offset + limit
+  // au-dela de 10000, ce qui rendait 81 % des pages annoncees inaccessibles.
+  const [reachable, setReachable] = useState(0);
   const [searchValue, setSearchValue] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -34,6 +37,7 @@ const ShowSearch = () => {
         if (cancelled) return;
         setMangaList(resp.data.Mangalist || []);
         setTotal(resp.data.Total || 0);
+        setReachable(resp.data.Reachable ?? resp.data.Total ?? 0);
       } catch (err) {
         if (!cancelled) {
           setError(messageFromError(err, "Search failed."));
@@ -49,7 +53,8 @@ const ShowSearch = () => {
   }, [offset, query]);
 
   const isLoading = !mangaList && !error;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(reachable / PAGE_SIZE));
+  const isCapped = total > reachable;
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
 
   const handleSearch = () => {
@@ -83,6 +88,11 @@ const ShowSearch = () => {
           {total > 0
             ? `${total.toLocaleString("en-US")} titles found`
             : "No titles found"}
+          {isCapped && (
+            <span className="ml-1 text-ink-500">
+              (first {reachable.toLocaleString("en-US")} browsable)
+            </span>
+          )}
         </p>
 
         <div className="mt-5 flex max-w-lg items-center gap-2 rounded-full bg-ink-850 px-4 ring-1 ring-white/10 focus-within:ring-brand-400">

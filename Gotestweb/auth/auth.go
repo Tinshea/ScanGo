@@ -98,13 +98,13 @@ func RequireAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenString, err := extractBearer(r.Header.Get("Authorization"))
 		if err != nil {
-			http.Error(w, "Authentification requise", http.StatusUnauthorized)
+			http.Error(w, "Authentication required", http.StatusUnauthorized)
 			return
 		}
 
 		userID, err := ParseToken(tokenString)
 		if err != nil {
-			http.Error(w, "Jeton invalide ou expiré", http.StatusUnauthorized)
+			http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 			return
 		}
 
@@ -129,7 +129,7 @@ func UserID(ctx context.Context) (string, error) {
 func MustUserID(w http.ResponseWriter, r *http.Request) (string, bool) {
 	id, err := UserID(r.Context())
 	if err != nil {
-		http.Error(w, "Authentification requise", http.StatusUnauthorized)
+		http.Error(w, "Authentication required", http.StatusUnauthorized)
 		return "", false
 	}
 	return id, true

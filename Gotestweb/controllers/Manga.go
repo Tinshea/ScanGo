@@ -26,7 +26,34 @@ const (
 	// maxChapterPages borne la pagination. Sans cette limite, une réponse
 	// amont incohérente (données vides mais total non nul) boucle à l'infini.
 	maxChapterPages = 50
+
+	// maxResultWindow est la profondeur maximale acceptée par MangaDex :
+	// « Result window is too large, from + size must be <= 10000 ».
+	//
+	// Le catalogue annonce plus de 51 000 titres, soit 2148 pages de 24. Sans
+	// ce plafond, l'interface proposait ces 2148 pages alors que seules 416
+	// répondaient : au-delà, MangaDex renvoyait une erreur 400 et l'utilisateur
+	// tombait sur « Could not load the catalogue ».
+	maxResultWindow = 10000
 )
+
+// clampWindow ramène l'offset dans la fenêtre acceptée par MangaDex et
+// renvoie le nombre de résultats réellement atteignables.
+func clampWindow(offset, limit, total int) (int, int) {
+	maxOffset := maxResultWindow - limit
+	if maxOffset < 0 {
+		maxOffset = 0
+	}
+	if offset > maxOffset {
+		offset = maxOffset
+	}
+
+	reachable := total
+	if reachable > maxResultWindow {
+		reachable = maxResultWindow
+	}
+	return offset, reachable
+}
 
 // ---------------------------------------------------------------------------
 // Cache des classifications de contenu
@@ -215,14 +242,14 @@ func GetManga(w http.ResponseWriter, r *http.Request) {
 
 	mangaID := r.URL.Query().Get("id")
 	if mangaID == "" {
-		http.Error(w, "ID de manga manquant dans la requête", http.StatusBadRequest)
+		http.Error(w, "Missing manga id", http.StatusBadRequest)
 		return
 	}
 
 	manga, err := fetchMangaByID(ctx, mangaID)
 	if err != nil {
 		log.Printf("GetManga(%s): %v", mangaID, err)
-		http.Error(w, "Impossible de récupérer le manga", mangadex.HTTPStatus(err))
+		http.Error(w, "Could not load this title", mangadex.HTTPStatus(err))
 		return
 	}
 
@@ -230,7 +257,7 @@ func GetManga(w http.ResponseWriter, r *http.Request) {
 	// Réponse 404 plutôt que 403 : inutile de confirmer l'existence du titre.
 	if !config.IsRatingAllowed(manga.Attributes.ContentRating) {
 		storeRating(mangaID, false)
-		http.Error(w, "Manga introuvable", http.StatusNotFound)
+		http.Error(w, "Title not found", http.StatusNotFound)
 		return
 	}
 	storeRating(mangaID, true)
@@ -238,7 +265,7 @@ func GetManga(w http.ResponseWriter, r *http.Request) {
 	chapters, total, err := fetchAllChapters(ctx, mangaID)
 	if err != nil {
 		log.Printf("GetManga(%s) chapitres: %v", mangaID, err)
-		http.Error(w, "Impossible de récupérer les chapitres", mangadex.HTTPStatus(err))
+		http.Error(w, "Could not load the chapters", mangadex.HTTPStatus(err))
 		return
 	}
 
@@ -351,24 +378,31 @@ func BrowseManga(w http.ResponseWriter, r *http.Request) {
 	case "":
 		section = SectionExplore
 	default:
-		http.Error(w, "Section inconnue", http.StatusBadRequest)
+		http.Error(w, "Unknown section", http.StatusBadRequest)
 		return
 	}
 
 	limit := clampInt(q.Get("limit"), 24, 1, 100)
-	offset := clampInt(q.Get("offset"), 0, 0, 10000)
+	// L'offset est ramené dans la fenêtre autorisée avant l'appel : une URL
+	// forgée à la main ne doit pas produire une erreur amont.
+	offset, _ := clampWindow(clampInt(q.Get("offset"), 0, 0, maxResultWindow), limit, 0)
 
 	res, err := fetchMangaList(ctx, sectionParams(section, limit, offset))
 	if err != nil {
 		log.Printf("BrowseManga(%s): %v", section, err)
-		http.Error(w, "Impossible de récupérer le catalogue", mangadex.HTTPStatus(err))
+		http.Error(w, "Could not load the catalogue", mangadex.HTTPStatus(err))
 		return
 	}
+
+	_, reachable := clampWindow(offset, limit, res.Total)
 
 	writeJSON(w, map[string]interface{}{
 		"Section":   section,
 		"Mangalist": extractMangasData(res),
-		"Total":     res.Total,
+		// Total est le volume réel du catalogue, affiché tel quel.
+		"Total": res.Total,
+		// Reachable borne la pagination à ce que l'API accepte de servir.
+		"Reachable": reachable,
 		"Limit":     res.Limit,
 		"Offset":    res.Offset,
 	})
@@ -380,7 +414,7 @@ func HomeManga(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 
 	limit := clampInt(q.Get("limit"), 10, 1, 100)
-	offset := clampInt(q.Get("offset"), 0, 0, 10000)
+	offset, _ := clampWindow(clampInt(q.Get("offset"), 0, 0, maxResultWindow), limit, 0)
 
 	// Exploration : pilotée par la recherche et les tags.
 	browse := sectionParams(SectionExplore, limit, offset)
@@ -393,7 +427,7 @@ func HomeManga(w http.ResponseWriter, r *http.Request) {
 		tagIDs, err := mangadex.ResolveTags(ctx, tagNames)
 		if err != nil {
 			log.Printf("HomeManga: résolution des tags : %v", err)
-			http.Error(w, "Impossible de résoudre les genres", mangadex.HTTPStatus(err))
+			http.Error(w, "Could not resolve the genres", mangadex.HTTPStatus(err))
 			return
 		}
 		for _, id := range tagIDs {
@@ -407,27 +441,30 @@ func HomeManga(w http.ResponseWriter, r *http.Request) {
 	browseRes, err := fetchMangaList(ctx, browse)
 	if err != nil {
 		log.Printf("HomeManga (exploration): %v", err)
-		http.Error(w, "Impossible de récupérer le catalogue", mangadex.HTTPStatus(err))
+		http.Error(w, "Could not load the catalogue", mangadex.HTTPStatus(err))
 		return
 	}
 	newestRes, err := fetchMangaList(ctx, newest)
 	if err != nil {
 		log.Printf("HomeManga (nouveautés): %v", err)
-		http.Error(w, "Impossible de récupérer les nouveautés", mangadex.HTTPStatus(err))
+		http.Error(w, "Could not load the latest titles", mangadex.HTTPStatus(err))
 		return
 	}
 	popularRes, err := fetchMangaList(ctx, popular)
 	if err != nil {
 		log.Printf("HomeManga (populaires): %v", err)
-		http.Error(w, "Impossible de récupérer les titres populaires", mangadex.HTTPStatus(err))
+		http.Error(w, "Could not load the popular titles", mangadex.HTTPStatus(err))
 		return
 	}
+
+	_, reachable := clampWindow(offset, limit, browseRes.Total)
 
 	writeJSON(w, map[string]interface{}{
 		"Mangalist":        extractMangasData(browseRes),
 		"Newestmangalist":  extractMangasData(newestRes),
 		"Popularmangalist": extractMangasData(popularRes),
 		"Total":            browseRes.Total,
+		"Reachable":        reachable,
 		"Limit":            browseRes.Limit,
 		"Offset":           browseRes.Offset,
 	})
@@ -446,7 +483,7 @@ func GetTags(w http.ResponseWriter, r *http.Request) {
 	names, err := mangadex.TagNames(r.Context())
 	if err != nil {
 		log.Printf("GetTags: %v", err)
-		http.Error(w, "Impossible de récupérer les genres", mangadex.HTTPStatus(err))
+		http.Error(w, "Could not load the genres", mangadex.HTTPStatus(err))
 		return
 	}
 	writeJSON(w, map[string]interface{}{"tags": names})
@@ -458,7 +495,7 @@ func GetChapterPages(w http.ResponseWriter, r *http.Request) {
 
 	chapterID := r.URL.Query().Get("id")
 	if chapterID == "" {
-		http.Error(w, "ID de chapitre manquant", http.StatusBadRequest)
+		http.Error(w, "Missing chapter id", http.StatusBadRequest)
 		return
 	}
 
@@ -467,17 +504,17 @@ func GetChapterPages(w http.ResponseWriter, r *http.Request) {
 	mangaID, err := mangaIDOfChapter(ctx, chapterID)
 	if err != nil {
 		log.Printf("GetChapterPages(%s): %v", chapterID, err)
-		http.Error(w, "Chapitre introuvable", mangadex.HTTPStatus(err))
+		http.Error(w, "Chapter not found", mangadex.HTTPStatus(err))
 		return
 	}
 	allowed, err := isMangaAllowed(ctx, mangaID)
 	if err != nil {
 		log.Printf("GetChapterPages(%s) contrôle du contenu: %v", chapterID, err)
-		http.Error(w, "Chapitre indisponible", mangadex.HTTPStatus(err))
+		http.Error(w, "Chapter unavailable", mangadex.HTTPStatus(err))
 		return
 	}
 	if !allowed {
-		http.Error(w, "Chapitre introuvable", http.StatusNotFound)
+		http.Error(w, "Chapter not found", http.StatusNotFound)
 		return
 	}
 
@@ -491,7 +528,7 @@ func GetChapterPages(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := mangadex.GetJSON(ctx, "/at-home/server/"+chapterID, nil, &pages); err != nil {
 		log.Printf("GetChapterPages(%s) pages: %v", chapterID, err)
-		http.Error(w, "Impossible de récupérer les pages", mangadex.HTTPStatus(err))
+		http.Error(w, "Could not load the pages", mangadex.HTTPStatus(err))
 		return
 	}
 
@@ -525,7 +562,7 @@ func GetUserMangaDetails(w http.ResponseWriter, r *http.Request) {
 
 	userID := r.URL.Query().Get("id")
 	if userID == "" {
-		http.Error(w, "ID utilisateur manquant", http.StatusBadRequest)
+		http.Error(w, "Missing user id", http.StatusBadRequest)
 		return
 	}
 
@@ -533,7 +570,7 @@ func GetUserMangaDetails(w http.ResponseWriter, r *http.Request) {
 	err := db.Client.Database(db.DBName).Collection("User").
 		FindOne(ctx, bson.M{"id": userID}).Decode(&user)
 	if err != nil {
-		http.Error(w, "Utilisateur non trouvé dans la base de données", http.StatusNotFound)
+		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 

@@ -36,7 +36,7 @@ const ShowSearch = () => {
         setTotal(resp.data.Total || 0);
       } catch (err) {
         if (!cancelled) {
-          setError(messageFromError(err, "La recherche a échoué."));
+          setError(messageFromError(err, "Search failed."));
           setMangaList([]);
         }
       }
@@ -69,32 +69,32 @@ const ShowSearch = () => {
       {/* Les pages de recherche sont désindexées : leurs combinaisons sont
           infinies et leur contenu duplique celui du catalogue. */}
       <Seo
-        title={`Recherche : ${query}`}
+        title={`Search: ${query}`}
         path={`/search/${encodeURIComponent(query)}`}
-        description={`Résultats de recherche pour ${query} sur MangaGo.`}
+        description={`Search results for ${query} on MangaGo.`}
         noindex
       />
 
       <header className="mb-8 border-b border-white/5 pb-6">
         <h1 className="text-3xl text-ink-050 md:text-4xl">
-          Résultats pour {query}
+          Results for {query}
         </h1>
         <p className="mt-2 text-sm text-ink-400">
           {total > 0
-            ? `${total.toLocaleString("fr-FR")} titres trouvés`
-            : "Aucun titre trouvé"}
+            ? `${total.toLocaleString("en-US")} titles found`
+            : "No titles found"}
         </p>
 
         <div className="mt-5 flex max-w-lg items-center gap-2 rounded-full bg-ink-850 px-4 ring-1 ring-white/10 focus-within:ring-brand-400">
           <Search size={16} strokeWidth={2} className="shrink-0 text-ink-500" />
           <label htmlFor="recherche-page" className="sr-only-focusable">
-            Rechercher un autre titre
+            Search another title
           </label>
           <input
             id="recherche-page"
             type="search"
             className="w-full bg-transparent py-2.5 text-sm text-ink-100 outline-none placeholder:text-ink-400"
-            placeholder="Rechercher un autre titre"
+            placeholder="Search another title"
             value={searchValue}
             onChange={(event) => setSearchValue(event.target.value)}
             onKeyDown={(event) => {
@@ -106,13 +106,13 @@ const ShowSearch = () => {
 
       {error && <p className="mb-6 text-brand-400">{error}</p>}
 
-      <h2 className="sr-only-focusable">Résultats</h2>
+      <h2 className="sr-only-focusable">Results</h2>
 
       {isLoading ? (
         <SkeletonGrid count={PAGE_SIZE} />
       ) : mangaList.length === 0 ? (
         <p className="py-12 text-center text-ink-400">
-          Aucun résultat pour cette recherche.
+          No results for this search.
         </p>
       ) : (
         <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">

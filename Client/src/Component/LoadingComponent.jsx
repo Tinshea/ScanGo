@@ -7,7 +7,7 @@ const LoadingComponent = () => (
   <div
     className="flex min-h-[40vh] items-center justify-center gap-2"
     role="status"
-    aria-label="Chargement en cours"
+    aria-label="Loading"
   >
     <span className="h-2.5 w-2.5 animate-bounce rounded-full bg-ink-400" />
     <span className="h-2.5 w-2.5 animate-bounce rounded-full bg-ink-400 [animation-delay:-.3s]" />

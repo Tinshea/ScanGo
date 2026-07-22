@@ -23,7 +23,7 @@ const Home = () => {
         setPopularMangaList(res.data.Popularmangalist || []);
       } catch (err) {
         if (!cancelled) {
-          setError(messageFromError(err, "Impossible de charger le catalogue."));
+          setError(messageFromError(err, "Could not load the catalogue."));
           setNewMangaList([]);
           setMangaList([]);
           setPopularMangaList([]);
@@ -41,7 +41,7 @@ const Home = () => {
     <>
       <Seo
         path="/"
-        description="Lisez des mangas en ligne sur MangaGo. Catalogue complet, nouveautés, recherche par genre, lecteur immersif et suivi de vos lectures."
+        description="Read manga online on MangaGo. Full catalogue, latest releases, genre search, immersive reader and reading history."
       />
 
       {/* Un seul h1 par page, placé en tête du document. La page portait
@@ -50,7 +50,7 @@ const Home = () => {
           carrousel, dont le titre change et ne peut pas servir de titre de
           page. */}
       <h1 className="sr-only-focusable">
-        MangaGo, lecteur de mangas en ligne
+        MangaGo, read manga online
       </h1>
 
       {error && (
@@ -62,15 +62,15 @@ const Home = () => {
       <ImageSlider mangaList={popularMangaList} />
 
       <DisplayList
-        title="Nouveautés"
-        description="Les derniers titres ajoutés au catalogue"
+        title="Latest"
+        description="The latest titles added to the catalogue"
         mangaList={newMangaList}
         section="nouveaute"
       />
 
       <DisplayList
-        title="Explorer"
-        description="Parcourir l'ensemble du catalogue"
+        title="Browse"
+        description="Browse the whole catalogue"
         mangaList={mangaList}
         section="explorer"
       />

@@ -12,11 +12,11 @@ const PAGE_SIZE = 24;
 // Sections proposées, alignées sur les constantes du backend.
 const SECTIONS = {
   nouveaute: {
-    title: "Nouveautés",
-    subtitle: "Les derniers titres ajoutés au catalogue",
+    title: "Latest",
+    subtitle: "The latest titles added to the catalogue",
   },
-  explorer: { title: "Explorer", subtitle: "L'ensemble du catalogue" },
-  populaire: { title: "Populaires", subtitle: "Les titres les plus suivis" },
+  explorer: { title: "Browse", subtitle: "The whole catalogue" },
+  populaire: { title: "Popular", subtitle: "The most followed titles" },
 };
 
 const Browse = () => {
@@ -47,7 +47,7 @@ const Browse = () => {
         setTotal(res.data.Total || 0);
       } catch (err) {
         if (!cancelled) {
-          setError(messageFromError(err, "Impossible de charger cette section."));
+          setError(messageFromError(err, "Could not load this section."));
           setMangaList([]);
         }
       }
@@ -75,7 +75,7 @@ const Browse = () => {
       <Seo
         title={meta.title}
         path={`/browse/${section}`}
-        description={`${meta.subtitle} sur MangaGo. Parcourez ${total > 0 ? total.toLocaleString("fr-FR") : "des milliers de"} titres.`}
+        description={`${meta.subtitle} on MangaGo. Browse ${total > 0 ? total.toLocaleString("en-US") : "des milliers de"} titres.`}
       />
 
       {/* En-tête aligné à gauche plutôt que centré : la lecture d'un catalogue
@@ -85,7 +85,7 @@ const Browse = () => {
         <h1 className="text-3xl text-ink-050 md:text-4xl">{meta.title}</h1>
         <p className="mt-2 text-sm text-ink-400">
           {meta.subtitle}
-          {total > 0 && ` · ${total.toLocaleString("fr-FR")} titres`}
+          {total > 0 && ` · ${total.toLocaleString("en-US")} titres`}
         </p>
       </header>
 
@@ -93,18 +93,18 @@ const Browse = () => {
 
       {/* Titre de niveau 2 masqué : il évite de passer d'un h1 à des h3 sans
           palier intermédiaire dans la structure du document. */}
-      <h2 className="sr-only-focusable">Titres de la section</h2>
+      <h2 className="sr-only-focusable">Section titles</h2>
 
       {isLoading ? (
         <SkeletonGrid count={PAGE_SIZE} />
       ) : mangaList.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="text-ink-400">Aucun titre à afficher.</p>
+          <p className="text-ink-400">No titles to show.</p>
           <Link
             to="/"
             className="mt-4 inline-block rounded-full bg-brand-500 px-6 py-3 text-sm font-bold whitespace-nowrap text-white transition-colors duration-300 hover:bg-brand-600"
           >
-            Retour à l&apos;accueil
+            Back to home
           </Link>
         </div>
       ) : (

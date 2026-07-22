@@ -21,7 +21,7 @@ const SignIn = ({ handleSwitch }) => {
 
   return (
     <div>
-      <h2 className="mb-5 text-xl text-ink-050">Connexion</h2>
+      <h2 className="mb-5 text-xl text-ink-050">Sign in</h2>
 
       <form onSubmit={handleSignIn} className="flex flex-col gap-4">
         {error && (
@@ -34,7 +34,7 @@ const SignIn = ({ handleSwitch }) => {
           {/* Les noms de champs (username, password) sont inchangés : la règle
               11.F interdit de les renommer. */}
           <label htmlFor="signin-username" className={labelClass}>
-            Nom d&apos;utilisateur
+            Username
           </label>
           <input
             id="signin-username"
@@ -48,7 +48,7 @@ const SignIn = ({ handleSwitch }) => {
 
         <div>
           <label htmlFor="signin-password" className={labelClass}>
-            Mot de passe
+            Password
           </label>
           <input
             id="signin-password"
@@ -65,18 +65,18 @@ const SignIn = ({ handleSwitch }) => {
           disabled={isSubmitting}
           className={`mt-1 ${primaryButton}`}
         >
-          {isSubmitting ? "Connexion..." : "Se connecter"}
+          {isSubmitting ? "Signing in..." : "Sign in"}
         </button>
       </form>
 
       <p className="mt-5 text-center text-sm text-ink-400">
-        Pas encore de compte ?{" "}
+        No account yet?{" "}
         <button
           type="button"
           onClick={handleSwitch}
           className="font-semibold text-brand-400 hover:underline"
         >
-          Créer un compte
+          Create an account
         </button>
       </p>
     </div>

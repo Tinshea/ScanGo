@@ -19,7 +19,7 @@ const Sidebar = ({ mangaDetails }) => {
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          aria-label="Ouvrir la liste des chapitres"
+          aria-label="Open the chapter list"
           className="fixed left-4 top-20 z-40 grid h-10 w-10 place-items-center rounded-full bg-ink-900/90 text-ink-200 ring-1 ring-white/10 backdrop-blur transition-colors duration-300 hover:bg-ink-850 hover:text-ink-050"
         >
           <Menu size={18} strokeWidth={2} />
@@ -29,7 +29,7 @@ const Sidebar = ({ mangaDetails }) => {
       {isOpen && (
         <button
           type="button"
-          aria-label="Fermer la liste des chapitres"
+          aria-label="Close the chapter list"
           onClick={() => setIsOpen(false)}
           className="fixed inset-0 z-40 bg-ink-950/60 backdrop-blur-sm"
         />
@@ -48,7 +48,7 @@ const Sidebar = ({ mangaDetails }) => {
               className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5 text-sm font-semibold text-ink-200 transition-colors duration-300 hover:bg-white/10 hover:text-ink-050"
             >
               <ArrowLeft size={16} strokeWidth={2} />
-              Retour
+              Back
             </Link>
           ) : (
             <span />
@@ -56,7 +56,7 @@ const Sidebar = ({ mangaDetails }) => {
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            aria-label="Fermer"
+            aria-label="Close"
             className="grid h-8 w-8 place-items-center rounded-full text-ink-400 transition-colors duration-300 hover:text-ink-050"
           >
             <X size={18} strokeWidth={2} />
@@ -64,10 +64,10 @@ const Sidebar = ({ mangaDetails }) => {
         </div>
 
         <nav className="flex-1 overflow-y-auto p-3">
-          <h2 className="mb-2 px-1 text-sm font-bold text-ink-050">Chapitres</h2>
+          <h2 className="mb-2 px-1 text-sm font-bold text-ink-050">Chapters</h2>
 
           {chapters.length === 0 ? (
-            <p className="px-1 text-sm text-ink-400">Aucun chapitre disponible.</p>
+            <p className="px-1 text-sm text-ink-400">No chapters available.</p>
           ) : (
             <ol className="flex flex-col gap-1">
               {chapters.map((chapter) => (
@@ -79,8 +79,8 @@ const Sidebar = ({ mangaDetails }) => {
                     className="block truncate rounded-sm px-3 py-2 text-sm text-ink-300 transition-colors duration-200 hover:bg-white/5 hover:text-ink-050"
                   >
                     {chapter.attributes?.chapter != null
-                      ? `Chapitre ${chapter.attributes.chapter}`
-                      : "Chapitre"}
+                      ? `Chapter ${chapter.attributes.chapter}`
+                      : "Chapter"}
                   </Link>
                 </li>
               ))}

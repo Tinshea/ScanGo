@@ -17,7 +17,7 @@ const Comment = ({ comments, setComments }) => {
       await api.delete("/user/chapter/comment", { params: { id: commentId } });
       setComments((prev) => prev.filter((c) => c.id !== commentId));
     } catch (err) {
-      setError(messageFromError(err, "Impossible de supprimer ce commentaire."));
+      setError(messageFromError(err, "Could not delete this comment."));
     } finally {
       setDeletingId(null);
     }
@@ -26,7 +26,7 @@ const Comment = ({ comments, setComments }) => {
   if (!Array.isArray(comments) || comments.length === 0) {
     return (
       <p className="mt-6 text-center text-sm text-ink-500">
-        Aucun commentaire pour le moment.
+        No comments yet.
       </p>
     );
   }
@@ -59,7 +59,7 @@ const Comment = ({ comments, setComments }) => {
               )}
 
               <span className="truncate text-sm font-bold text-ink-100">
-                {comment.author || "Utilisateur"}
+                {comment.author || "User"}
               </span>
 
               <time
@@ -74,7 +74,7 @@ const Comment = ({ comments, setComments }) => {
                   type="button"
                   onClick={() => handleDelete(comment.id)}
                   disabled={isDeleting}
-                  aria-label="Supprimer mon commentaire"
+                  aria-label="Delete my comment"
                   className="shrink-0 rounded-full p-1.5 text-ink-500 transition-colors duration-300 hover:bg-white/5 hover:text-brand-400 disabled:opacity-40"
                 >
                   <Trash2 size={16} strokeWidth={2} />

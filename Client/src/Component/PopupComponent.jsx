@@ -35,7 +35,7 @@ const PopupComponent = ({ message, onClose, duration = 4000 }) => {
         <button
           type="button"
           onClick={onClose}
-          aria-label="Fermer le message"
+          aria-label="Close message"
           className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-ink-400 transition-colors duration-300 hover:bg-white/10 hover:text-ink-050"
         >
           <X size={14} strokeWidth={2} />

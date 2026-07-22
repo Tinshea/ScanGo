@@ -74,21 +74,21 @@ const ReaderSettings = ({ open, onClose, settings, update, reset, detected }) =>
     <>
       <button
         type="button"
-        aria-label="Fermer les réglages"
+        aria-label="Close settings"
         onClick={onClose}
         className="fixed inset-0 z-50 bg-ink-950/70 backdrop-blur-sm"
       />
 
       <aside
-        aria-label="Réglages de lecture"
+        aria-label="Reader settings"
         className="fixed right-0 top-0 z-50 flex h-dvh w-[22rem] max-w-full flex-col border-l border-white/10 bg-ink-900 shadow-2xl"
       >
         <div className="flex items-center justify-between border-b border-white/5 px-5 py-4">
-          <h2 className="text-lg text-ink-050">Réglages de lecture</h2>
+          <h2 className="text-lg text-ink-050">Reader settings</h2>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label="Close"
             className="grid h-9 w-9 place-items-center rounded-full text-ink-400 transition-colors duration-300 hover:bg-white/5 hover:text-ink-050"
           >
             <X size={18} strokeWidth={2} />
@@ -97,11 +97,11 @@ const ReaderSettings = ({ open, onClose, settings, update, reset, detected }) =>
 
         <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-5 py-5">
           <Group
-            label="Mode de lecture"
+            label="Reading mode"
             hint={
               settings.mode === "auto" && detected
-                ? `Format détecté : ${detected === "webtoon" ? "webtoon, défilement continu" : "manga, mode paginé"}.`
-                : "Automatique : déduit du format des planches."
+                ? `Detected format : ${detected === "webtoon" ? "webtoon, continuous scroll" : "manga, paged mode"}.`
+                : "Automatic, based on the shape of the pages."
             }
           >
             <div className="flex gap-1.5">
@@ -109,34 +109,34 @@ const ReaderSettings = ({ open, onClose, settings, update, reset, detected }) =>
                 Auto
               </Choice>
               <Choice name="mode" value="continu" current={settings.mode} onChange={(v) => update({ mode: v })}>
-                Continu
+                Continuous
               </Choice>
               <Choice name="mode" value="pagine" current={settings.mode} onChange={(v) => update({ mode: v })}>
-                Paginé
+                Paged
               </Choice>
             </div>
           </Group>
 
           <Group
-            label="Ajustement des planches"
-            hint="Originale conserve la résolution native, sans étirement ni réduction."
+            label="Page fit"
+            hint="Original keeps the native resolution, with no stretching or shrinking."
           >
             <div className="flex gap-1.5">
               <Choice name="fit" value="largeur" current={settings.fit} onChange={(v) => update({ fit: v })}>
-                Largeur
+                Width
               </Choice>
               <Choice name="fit" value="hauteur" current={settings.fit} onChange={(v) => update({ fit: v })}>
-                Hauteur
+                Height
               </Choice>
               <Choice name="fit" value="originale" current={settings.fit} onChange={(v) => update({ fit: v })}>
-                Originale
+                Original
               </Choice>
             </div>
           </Group>
 
           <Group
-            label="Largeur de lecture"
-            hint={`${settings.maxWidth} pixels. Au-delà de la largeur native, la planche n'est plus étirée.`}
+            label="Reading width"
+            hint={`${settings.maxWidth} pixels. Beyond the native width, pages are no longer stretched.`}
           >
             <input
               type="range"
@@ -145,14 +145,14 @@ const ReaderSettings = ({ open, onClose, settings, update, reset, detected }) =>
               step={50}
               value={settings.maxWidth}
               onChange={(e) => update({ maxWidth: Number(e.target.value) })}
-              aria-label="Largeur de la colonne de lecture en pixels"
+              aria-label="Reading column width in pixels"
               className="w-full accent-brand-500"
             />
           </Group>
 
           {isPaged && (
             <>
-              <Group label="Sens de lecture" hint="Le sens japonais se lit de droite à gauche.">
+              <Group label="Reading direction" hint="Japanese direction reads right to left.">
                 <div className="flex gap-1.5">
                   <Choice
                     name="direction"
@@ -160,7 +160,7 @@ const ReaderSettings = ({ open, onClose, settings, update, reset, detected }) =>
                     current={settings.direction}
                     onChange={(v) => update({ direction: v })}
                   >
-                    Occidental
+                    Western
                   </Choice>
                   <Choice
                     name="direction"
@@ -168,14 +168,14 @@ const ReaderSettings = ({ open, onClose, settings, update, reset, detected }) =>
                     current={settings.direction}
                     onChange={(v) => update({ direction: v })}
                   >
-                    Japonais
+                    Japanese
                   </Choice>
                 </div>
               </Group>
 
-              <Group label="Double planche" hint="Affiche deux pages côte à côte, comme un volume ouvert.">
+              <Group label="Double page" hint="Shows two pages side by side, like an open volume.">
                 <label className="flex cursor-pointer items-center justify-between gap-3 rounded-sm bg-white/5 px-3 py-2.5 text-xs font-semibold text-ink-200">
-                  Deux pages par vue
+                  Two pages per view
                   <input
                     type="checkbox"
                     checked={settings.doublePage}
@@ -187,9 +187,9 @@ const ReaderSettings = ({ open, onClose, settings, update, reset, detected }) =>
             </>
           )}
 
-          <Group label="Confort" hint="Le mode immersif masque l'en-tête et la barre d'outils.">
+          <Group label="Comfort" hint="Immersive mode hides the header and the toolbar.">
             <label className="flex cursor-pointer items-center justify-between gap-3 rounded-sm bg-white/5 px-3 py-2.5 text-xs font-semibold text-ink-200">
-              Lecture immersive
+              Immersive reading
               <input
                 type="checkbox"
                 checked={settings.immersif}
@@ -205,11 +205,11 @@ const ReaderSettings = ({ open, onClose, settings, update, reset, detected }) =>
             className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-white/5 px-4 py-2.5 text-xs font-semibold text-ink-300 transition-colors duration-300 hover:bg-white/10 hover:text-ink-050"
           >
             <RotateCcw size={14} strokeWidth={2} />
-            Rétablir les réglages par défaut
+            Reset to defaults
           </button>
 
           <p className="text-xs text-ink-400">
-            Vos réglages sont conservés sur cet appareil.
+            Your settings are saved on this device.
           </p>
         </div>
       </aside>

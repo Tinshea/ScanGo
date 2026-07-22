@@ -29,7 +29,7 @@ export default function Manga({ mangaData, headingLevel = "h3", className = "" }
       <Link
         to={`/manga/${mangaData.id}`}
         className="block focus:outline-none"
-        aria-label={`Ouvrir la fiche de ${title}`}
+        aria-label={`Open the page for ${title}`}
       >
         <article className="relative overflow-hidden rounded-md bg-ink-900 ring-1 ring-white/5 transition-[transform,box-shadow] duration-500 ease-out-expo group-hover:-translate-y-1 group-hover:shadow-[0_18px_40px_-12px_rgba(0,0,0,0.8)] group-focus-visible:-translate-y-1">
           <div className="relative aspect-[2/3] overflow-hidden">

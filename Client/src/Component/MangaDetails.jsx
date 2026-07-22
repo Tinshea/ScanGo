@@ -12,10 +12,10 @@ import { cleanText } from "../utils/date";
 // Libellés de statut. L'interface affichait la valeur brute de l'API, en
 // anglais et en minuscules, au milieu d'une interface française.
 const STATUS_LABELS = {
-  ongoing: "En cours",
-  completed: "Terminé",
-  hiatus: "En pause",
-  cancelled: "Abandonné",
+  ongoing: "Ongoing",
+  completed: "Completed",
+  hiatus: "On hiatus",
+  cancelled: "Cancelled",
 };
 
 const MangaDetails = () => {
@@ -38,7 +38,7 @@ const MangaDetails = () => {
         if (!cancelled) setManga(res.data.MangaDetailList);
       } catch (error) {
         if (!cancelled) {
-          setLoadError(messageFromError(error, "Impossible de charger ce manga."));
+          setLoadError(messageFromError(error, "Could not load this title."));
         }
       }
     };
@@ -51,7 +51,7 @@ const MangaDetails = () => {
 
   const toggleFollow = useCallback(async () => {
     if (!isAuthenticated) {
-      setPopupMessage("Connectez-vous pour suivre ce manga.");
+      setPopupMessage("Sign in to follow this title.");
       return;
     }
 
@@ -62,9 +62,9 @@ const MangaDetails = () => {
         mangaId: id,
       });
       setFollowing(id, nextState);
-      setPopupMessage(nextState ? "Ajouté à vos suivis." : "Retiré de vos suivis.");
+      setPopupMessage(nextState ? "Added to your library." : "Removed from your library.");
     } catch (error) {
-      setPopupMessage(messageFromError(error, "L'opération a échoué."));
+      setPopupMessage(messageFromError(error, "That did not work."));
     } finally {
       setIsSubmitting(false);
     }
@@ -78,7 +78,7 @@ const MangaDetails = () => {
           to="/"
           className="rounded-full bg-brand-500 px-6 py-3 text-sm font-bold whitespace-nowrap text-white transition-colors duration-300 hover:bg-brand-600"
         >
-          Retour à l&apos;accueil
+          Back to home
         </Link>
       </div>
     );
@@ -101,7 +101,7 @@ const MangaDetails = () => {
         type="book"
         description={
           description ||
-          `Lisez ${title} en ligne sur MangaGo. ${manga.chapters?.length || 0} chapitres disponibles.`
+          `Read ${title} online on MangaGo. ${manga.chapters?.length || 0} chapters available.`
         }
         jsonLd={{
           "@context": "https://schema.org",
@@ -143,7 +143,7 @@ const MangaDetails = () => {
               <img
                 referrerPolicy="no-referrer"
                 src={manga.image}
-                alt={`Couverture de ${title}`}
+                alt={`Cover of ${title}`}
                 className="w-full rounded-lg shadow-[0_24px_60px_-20px_rgba(0,0,0,0.9)] ring-1 ring-white/10"
               />
             </div>
@@ -184,11 +184,11 @@ const MangaDetails = () => {
                     className="inline-flex items-center gap-2 rounded-full bg-brand-500 px-6 py-3 text-sm font-bold whitespace-nowrap text-white transition-colors duration-300 hover:bg-brand-600"
                   >
                     <BookOpen size={18} strokeWidth={2} />
-                    Commencer la lecture
+                    Start reading
                   </Link>
                 ) : (
                   <span className="inline-flex items-center rounded-full bg-ink-850 px-6 py-3 text-sm font-semibold text-ink-400">
-                    Aucun chapitre disponible
+                    No chapters available
                   </span>
                 )}
 
@@ -203,12 +203,12 @@ const MangaDetails = () => {
                   ) : (
                     <Heart size={18} strokeWidth={2} />
                   )}
-                  {isFollowing ? "Ne plus suivre" : "Suivre"}
+                  {isFollowing ? "Unfollow" : "Follow"}
                 </button>
               </div>
 
               <p className="max-w-[65ch] text-sm leading-relaxed text-ink-300">
-                {description || "Aucun résumé disponible pour ce titre."}
+                {description || "No description available for this title."}
               </p>
             </div>
           </div>
@@ -216,7 +216,7 @@ const MangaDetails = () => {
       </div>
 
       <section className="container-page py-12 md:py-16">
-        <h2 className="mb-5 text-2xl text-ink-050">Chapitres</h2>
+        <h2 className="mb-5 text-2xl text-ink-050">Chapters</h2>
         <ChapterList mangaDetails={manga} />
       </section>
     </>

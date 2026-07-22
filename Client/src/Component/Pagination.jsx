@@ -33,7 +33,7 @@ const Pagination = ({
         type="button"
         onClick={handlePreviousPage}
         disabled={currentPage === 1}
-        aria-label="Page précédente"
+        aria-label="Previous page"
         className={arrowClass}
       >
         <ChevronLeft size={18} strokeWidth={2} />
@@ -75,7 +75,7 @@ const Pagination = ({
         type="button"
         onClick={handleNextPage}
         disabled={currentPage === totalPages}
-        aria-label="Page suivante"
+        aria-label="Next page"
         className={arrowClass}
       >
         <ChevronRight size={18} strokeWidth={2} />

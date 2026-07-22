@@ -46,7 +46,7 @@ const DisplayList = ({ title, mangaList, section, description }) => {
             <button
               type="button"
               onClick={() => scrollBy(-1)}
-              aria-label={`Faire défiler ${title} vers la gauche`}
+              aria-label={`Scroll ${title} left`}
               className="grid h-9 w-9 place-items-center rounded-full bg-ink-850 text-ink-300 transition-colors duration-300 hover:bg-ink-800 hover:text-ink-050"
             >
               <ChevronLeft size={18} strokeWidth={2} />
@@ -54,7 +54,7 @@ const DisplayList = ({ title, mangaList, section, description }) => {
             <button
               type="button"
               onClick={() => scrollBy(1)}
-              aria-label={`Faire défiler ${title} vers la droite`}
+              aria-label={`Scroll ${title} right`}
               className="grid h-9 w-9 place-items-center rounded-full bg-ink-850 text-ink-300 transition-colors duration-300 hover:bg-ink-800 hover:text-ink-050"
             >
               <ChevronRight size={18} strokeWidth={2} />
@@ -66,7 +66,7 @@ const DisplayList = ({ title, mangaList, section, description }) => {
               to={`/browse/${section}`}
               className="group inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold text-ink-300 transition-colors duration-300 hover:text-brand-400"
             >
-              Voir tout
+              See all
               <ArrowRight
                 size={16}
                 strokeWidth={2}
@@ -80,7 +80,7 @@ const DisplayList = ({ title, mangaList, section, description }) => {
       {!mangaList ? (
         <SkeletonRow />
       ) : mangaList.length === 0 ? (
-        <p className="text-sm text-ink-400">Aucun titre à afficher.</p>
+        <p className="text-sm text-ink-400">No titles to show.</p>
       ) : (
         <ul
           ref={railRef}

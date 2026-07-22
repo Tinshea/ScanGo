@@ -86,7 +86,7 @@ const ChapterReader = () => {
         }
       } catch (error) {
         if (!cancelled) {
-          setLoadError(messageFromError(error, "Impossible de charger ce chapitre."));
+          setLoadError(messageFromError(error, "Could not load this chapter."));
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -234,7 +234,7 @@ const ChapterReader = () => {
 
       const text = commentInputRef.current?.value.trim();
       if (!text) {
-        setCommentError("Le commentaire ne peut pas être vide.");
+        setCommentError("The comment cannot be empty.");
         return;
       }
 
@@ -249,7 +249,7 @@ const ChapterReader = () => {
         setShowForm(false);
         commentInputRef.current.value = "";
       } catch (error) {
-        setCommentError(messageFromError(error, "Impossible de publier le commentaire."));
+        setCommentError(messageFromError(error, "Could not post the comment."));
       } finally {
         setIsPosting(false);
       }
@@ -267,7 +267,7 @@ const ChapterReader = () => {
           to="/"
           className="rounded-full bg-brand-500 px-6 py-3 text-sm font-bold whitespace-nowrap text-white transition-colors duration-300 hover:bg-brand-600"
         >
-          Retour à l&apos;accueil
+          Back to home
         </Link>
       </div>
     );
@@ -278,17 +278,17 @@ const ChapterReader = () => {
   if (pages.length === 0) {
     return (
       <div className="container-page flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
-        <p className="text-lg text-ink-100">Ce chapitre n&apos;est pas lisible ici.</p>
+        <p className="text-lg text-ink-100">This chapter cannot be read here.</p>
         <p className="max-w-md text-sm text-ink-400">
-          Il est hébergé par son éditeur officiel et ne peut pas être affiché
-          dans ce lecteur.
+          It is hosted by its official publisher and cannot be shown
+          in this reader.
         </p>
         {mangaDetails?.id && (
           <Link
             to={`/manga/${mangaDetails.id}`}
             className="mt-2 rounded-full bg-brand-500 px-6 py-3 text-sm font-bold whitespace-nowrap text-white transition-colors duration-300 hover:bg-brand-600"
           >
-            Retour à la fiche
+            Back to the title
           </Link>
         )}
       </div>
@@ -297,8 +297,8 @@ const ChapterReader = () => {
 
   const current = sortedChapters[chapterIndex];
   const chapterLabel = current?.attributes?.chapter
-    ? `Chapitre ${current.attributes.chapter}`
-    : "Chapitre";
+    ? `Chapter ${current.attributes.chapter}`
+    : "Chapter";
   const pageTitle = mangaDetails?.title
     ? `${mangaDetails.title}, ${chapterLabel}`
     : chapterLabel;
@@ -316,8 +316,8 @@ const ChapterReader = () => {
         path={`/chapter/${chapterId}`}
         description={
           mangaDetails?.title
-            ? `Lisez ${chapterLabel} de ${mangaDetails.title} en ligne sur MangaGo.`
-            : "Lecture de chapitre sur MangaGo."
+            ? `Read ${chapterLabel} de ${mangaDetails.title} online on MangaGo.`
+            : "Chapter reader on MangaGo."
         }
         noindex
       />
@@ -337,7 +337,7 @@ const ChapterReader = () => {
         aria-valuenow={progress}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label="Progression dans le chapitre"
+        aria-label="Chapter progress"
       >
         <div
           className="h-full bg-brand-500 transition-[width] duration-300 ease-out-expo"
@@ -360,13 +360,13 @@ const ChapterReader = () => {
         <>
           <button
             type="button"
-            aria-label="Vue précédente"
+            aria-label="Previous view"
             onClick={goPrev}
             className="fixed left-0 top-16 z-20 h-[calc(100dvh-4rem)] w-[15vw] cursor-w-resize opacity-0"
           />
           <button
             type="button"
-            aria-label="Vue suivante"
+            aria-label="Next view"
             onClick={goNext}
             className="fixed right-0 top-16 z-20 h-[calc(100dvh-4rem)] w-[15vw] cursor-e-resize opacity-0"
           />
@@ -381,7 +381,7 @@ const ChapterReader = () => {
             onClick={goPrev}
             disabled={!isPaged && !previousChapter}
             className={toolButton}
-            aria-label={isPaged ? "Vue précédente" : "Chapitre précédent"}
+            aria-label={isPaged ? "Previous view" : "Previous chapter"}
           >
             <ArrowLeft size={16} strokeWidth={2} />
           </button>
@@ -395,7 +395,7 @@ const ChapterReader = () => {
             onClick={goNext}
             disabled={!isPaged && !nextChapter}
             className={toolButton}
-            aria-label={isPaged ? "Vue suivante" : "Chapitre suivant"}
+            aria-label={isPaged ? "Next view" : "Next chapter"}
           >
             <ArrowRight size={16} strokeWidth={2} />
           </button>
@@ -406,7 +406,7 @@ const ChapterReader = () => {
             type="button"
             onClick={() => setSettingsOpen(true)}
             className={toolButton}
-            aria-label="Ouvrir les réglages de lecture"
+            aria-label="Open reader settings"
           >
             <Settings2 size={16} strokeWidth={2} />
           </button>
@@ -418,7 +418,7 @@ const ChapterReader = () => {
         <button
           type="button"
           onClick={() => setSettingsOpen(true)}
-          aria-label="Ouvrir les réglages de lecture"
+          aria-label="Open reader settings"
           className="fixed bottom-4 right-4 z-30 grid h-11 w-11 place-items-center rounded-full bg-ink-900/90 text-ink-200 ring-1 ring-white/10 backdrop-blur transition-colors duration-300 hover:text-ink-050"
         >
           <Settings2 size={18} strokeWidth={2} />
@@ -443,13 +443,13 @@ const ChapterReader = () => {
               className={toolButton}
             >
               <ArrowLeft size={16} strokeWidth={2} />
-              Chapitre précédent
+              Previous chapter
             </button>
           )}
           {mangaDetails?.id && (
             <Link to={`/manga/${mangaDetails.id}`} className={toolButton}>
               <List size={16} strokeWidth={2} />
-              Tous les chapitres
+              All chapters
             </Link>
           )}
           {nextChapter && (
@@ -458,7 +458,7 @@ const ChapterReader = () => {
               onClick={() => goToChapter(nextChapter)}
               className="inline-flex items-center gap-2 rounded-full bg-brand-500 px-5 py-2 text-sm font-bold whitespace-nowrap text-white transition-colors duration-300 hover:bg-brand-600"
             >
-              Chapitre suivant
+              Next chapter
               <ArrowRight size={16} strokeWidth={2} />
             </button>
           )}
@@ -469,7 +469,7 @@ const ChapterReader = () => {
         <section className="container-page w-full max-w-3xl pb-16">
           <h2 className="mb-4 flex items-center gap-2 text-xl text-ink-050">
             <MessageSquare size={18} strokeWidth={2} />
-            Commentaires
+            Comments
             {comments.length > 0 && (
               <span className="text-sm font-normal text-ink-500">
                 ({comments.length})
@@ -483,18 +483,18 @@ const ChapterReader = () => {
               className={toolButton}
               onClick={() => setShowForm((v) => !v)}
             >
-              {showForm ? "Annuler" : "Écrire un commentaire"}
+              {showForm ? "Cancel" : "Write a comment"}
             </button>
           ) : (
             <p className="text-sm text-ink-400">
-              Connectez-vous pour publier un commentaire.
+              Sign in to post a comment.
             </p>
           )}
 
           {showForm && isAuthenticated && (
             <form className="mt-4" onSubmit={requestPost}>
               <label htmlFor="nouveau-commentaire" className="sr-only-focusable">
-                Votre commentaire
+                Your comment
               </label>
               <textarea
                 id="nouveau-commentaire"
@@ -502,7 +502,7 @@ const ChapterReader = () => {
                 maxLength={2000}
                 rows={4}
                 className="w-full rounded-md bg-ink-900 p-3 text-sm text-ink-100 ring-1 ring-white/10 outline-none placeholder:text-ink-400 focus:ring-brand-400"
-                placeholder="Votre commentaire"
+                placeholder="Your comment"
               />
               {commentError && (
                 <p className="mt-2 text-sm text-brand-400">{commentError}</p>
@@ -512,7 +512,7 @@ const ChapterReader = () => {
                 disabled={isPosting}
                 className="mt-3 w-full rounded-full bg-brand-500 px-6 py-3 text-sm font-bold whitespace-nowrap text-white transition-colors duration-300 hover:bg-brand-600 disabled:opacity-50"
               >
-                {isPosting ? "Publication..." : "Publier"}
+                {isPosting ? "Posting..." : "Post"}
               </button>
             </form>
           )}

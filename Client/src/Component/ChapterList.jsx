@@ -63,7 +63,7 @@ const ChapterList = ({ mangaDetails }) => {
     return (
       <div className="rounded-md bg-ink-900 p-8 text-center">
         <p className="text-sm text-ink-300">
-          Aucun chapitre disponible en anglais pour ce titre.
+          No readable chapters for this title.
         </p>
       </div>
     );
@@ -77,14 +77,14 @@ const ChapterList = ({ mangaDetails }) => {
         <div className="flex items-center gap-2 rounded-full bg-ink-850 px-4 ring-1 ring-white/10 focus-within:ring-brand-400">
           <Search size={16} strokeWidth={2} className="shrink-0 text-ink-500" />
           <label htmlFor="filtre-chapitre" className="sr-only-focusable">
-            Filtrer les chapitres
+            Filter chapters
           </label>
           <input
             id="filtre-chapitre"
             type="search"
             value={filter}
             onChange={(event) => setFilter(event.target.value)}
-            placeholder="Filtrer par numéro"
+            placeholder="Filter by number"
             className="w-full bg-transparent py-2 text-sm text-ink-100 outline-none placeholder:text-ink-400"
           />
         </div>
@@ -97,19 +97,19 @@ const ChapterList = ({ mangaDetails }) => {
           <ArrowDownUp size={16} strokeWidth={2} />
           {/* Le libellé décrit l'action, alors qu'il décrivait auparavant
               l'état affiché, ce qui prêtait à confusion. */}
-          {isAscending ? "Voir les plus récents" : "Voir les plus anciens"}
+          {isAscending ? "Show newest first" : "Show oldest first"}
         </button>
       </div>
 
       <p className="text-xs text-ink-500">
         {visible.length} chapitre{visible.length > 1 ? "s" : ""}
         {isFiltering && ` sur ${chapters.length}`}
-        {!isFiltering && groups.length > 1 && ` répartis en ${groups.length} volumes`}
+        {!isFiltering && groups.length > 1 && ` across ${groups.length} volumes`}
       </p>
 
       {visible.length === 0 ? (
         <p className="rounded-md bg-ink-900 py-8 text-center text-sm text-ink-400">
-          Aucun chapitre ne correspond à ce filtre.
+          No chapter matches this filter.
         </p>
       ) : (
         <div className="flex flex-col gap-2">
@@ -124,7 +124,7 @@ const ChapterList = ({ mangaDetails }) => {
             >
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-bold text-ink-100 transition-colors duration-200 hover:bg-ink-850">
                 <span>
-                  {volume === NO_VOLUME ? "Chapitres hors volume" : `Volume ${volume}`}
+                  {volume === NO_VOLUME ? "Ungrouped chapters" : `Volume ${volume}`}
                   <span className="ml-2 font-normal text-ink-500">
                     {items.length} chapitre{items.length > 1 ? "s" : ""}
                   </span>
@@ -150,7 +150,7 @@ const ChapterList = ({ mangaDetails }) => {
                         className="flex items-center justify-between gap-4 px-4 py-2.5 transition-colors duration-200 hover:bg-ink-850"
                       >
                         <span className="min-w-0 truncate text-sm text-ink-200">
-                          {number != null ? `Chapitre ${number}` : "Chapitre"}
+                          {number != null ? `Chapter ${number}` : "Chapter"}
                           {/* Le deux-points n'apparaît que s'il précède un
                               intitulé réel, ce qui supprime les
                               « Chapitre 63: » orphelins. */}

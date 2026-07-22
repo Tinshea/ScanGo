@@ -40,7 +40,7 @@ const ImageSlider = ({ mangaList }) => {
   if (mangaList.length === 0) return null;
 
   return (
-    <section aria-label="Titres à la une" className="relative">
+    <section aria-label="Featured titles" className="relative">
       <Carousel
         showArrows
         showThumbs={false}
@@ -94,7 +94,7 @@ const ImageSlider = ({ mangaList }) => {
                   className="inline-flex items-center gap-2 rounded-full bg-brand-500 px-6 py-3 text-sm font-bold whitespace-nowrap text-white transition-colors duration-300 hover:bg-brand-600"
                 >
                   <BookOpen size={18} strokeWidth={2} />
-                  Découvrir ce titre
+                  View this title
                 </Link>
               </div>
             </div>

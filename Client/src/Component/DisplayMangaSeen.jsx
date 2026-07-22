@@ -16,7 +16,7 @@ const DisplayMangaSeen = ({ mangaSeenList }) => {
   if (!mangaSeenList) return <SkeletonRow count={4} />;
 
   if (mangaSeenList.length === 0) {
-    return <p className="text-sm text-ink-500">Aucune lecture enregistrée.</p>;
+    return <p className="text-sm text-ink-500">No reading history yet.</p>;
   }
 
   return (

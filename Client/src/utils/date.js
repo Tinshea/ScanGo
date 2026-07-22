@@ -10,7 +10,7 @@
  * @param {string} locale
  * @returns {string} chaîne vide si la date est invalide
  */
-export const timeSince = (publishDate, locale = "fr-FR") => {
+export const timeSince = (publishDate, locale = "en-US") => {
   if (!publishDate) return "";
 
   const date = new Date(publishDate);
@@ -19,14 +19,14 @@ export const timeSince = (publishDate, locale = "fr-FR") => {
   const diffMs = Date.now() - date.getTime();
   // Une date future (décalage d'horloge, publication programmée) ne doit pas
   // produire « il y a -3 minutes ».
-  if (diffMs < 0) return "à l'instant";
+  if (diffMs < 0) return "just now";
 
   const diffMinutes = Math.floor(diffMs / 60000);
-  if (diffMinutes < 1) return "à l'instant";
-  if (diffMinutes < 60) return `il y a ${diffMinutes} minute(s)`;
+  if (diffMinutes < 1) return "just now";
+  if (diffMinutes < 60) return ` ${diffMinutes} minute(s) ago`;
 
   const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `il y a ${diffHours} heure(s)`;
+  if (diffHours < 24) return ` ${diffHours} hour(s) ago`;
 
   return date.toLocaleDateString(locale, {
     year: "numeric",

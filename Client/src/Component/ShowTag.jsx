@@ -33,7 +33,7 @@ const ShowTag = () => {
         setTotal(resp.data.Total || 0);
       } catch (err) {
         if (!cancelled) {
-          setError(messageFromError(err, "Impossible de charger ce genre."));
+          setError(messageFromError(err, "Could not load this genre."));
           setMangaList([]);
         }
       }
@@ -59,34 +59,34 @@ const ShowTag = () => {
       {/* Les pages de genre sont indexables : leur contenu est stable et
           constitue une porte d'entrée légitime sur le catalogue. */}
       <Seo
-        title={`Mangas ${query}`}
+        title={`${query} manga`}
         path={`/tag/${encodeURIComponent(query)}`}
-        description={`Tous les mangas du genre ${query} à lire en ligne sur MangaGo.`}
+        description={`All manga in the ${query} genre, read online on MangaGo.`}
       />
 
       <header className="mb-8 border-b border-white/5 pb-6">
-        <h1 className="text-3xl text-ink-050 md:text-4xl">Mangas {query}</h1>
+        <h1 className="text-3xl text-ink-050 md:text-4xl">{query} manga</h1>
         <p className="mt-2 text-sm text-ink-400">
           {total > 0
-            ? `${total.toLocaleString("fr-FR")} titres dans ce genre`
-            : "Aucun titre dans ce genre"}
+            ? `${total.toLocaleString("en-US")} titles in this genre`
+            : "No titles in this genre"}
         </p>
       </header>
 
       {error && <p className="mb-6 text-brand-400">{error}</p>}
 
-      <h2 className="sr-only-focusable">Titres du genre</h2>
+      <h2 className="sr-only-focusable">Genre titles</h2>
 
       {isLoading ? (
         <SkeletonGrid count={PAGE_SIZE} />
       ) : mangaList.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="text-ink-400">Aucun titre dans ce genre.</p>
+          <p className="text-ink-400">No titles in this genre.</p>
           <Link
             to="/"
             className="mt-4 inline-block rounded-full bg-brand-500 px-6 py-3 text-sm font-bold whitespace-nowrap text-white transition-colors duration-300 hover:bg-brand-600"
           >
-            Retour à l&apos;accueil
+            Back to home
           </Link>
         </div>
       ) : (

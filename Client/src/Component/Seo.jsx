@@ -5,7 +5,7 @@ import { cleanText } from "../utils/date";
 const SITE_NAME = "MangaGo";
 const ORIGIN = "https://scan-go-lake.vercel.app";
 const DEFAULT_DESCRIPTION =
-  "Lisez des mangas en ligne sur MangaGo. Catalogue complet, nouveautés, recherche par genre, lecteur immersif et suivi de vos lectures.";
+  "Read manga online on MangaGo. Full catalogue, latest releases, genre search, immersive reader and reading history.";
 
 /**
  * Métadonnées par route.
@@ -41,7 +41,7 @@ const Seo = ({
 
   return (
     <Helmet prioritizeSeoTags>
-      <html lang="fr" />
+      <html lang="en" />
       <title>{fullTitle}</title>
       <meta name="description" content={truncated} />
       <link rel="canonical" href={canonical} />
@@ -52,7 +52,7 @@ const Seo = ({
 
       <meta property="og:type" content={type} />
       <meta property="og:site_name" content={SITE_NAME} />
-      <meta property="og:locale" content="fr_FR" />
+      <meta property="og:locale" content="en_US" />
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={truncated} />
       <meta property="og:url" content={canonical} />

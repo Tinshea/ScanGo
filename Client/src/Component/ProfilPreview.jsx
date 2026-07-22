@@ -16,7 +16,7 @@ const ProfilPreview = ({ user, onNavigate }) => {
   const { signOut } = useContext(AuthContext);
 
   if (!user) {
-    return <p className="text-center text-sm text-ink-400">Non connecté</p>;
+    return <p className="text-center text-sm text-ink-400">Not signed in</p>;
   }
 
   const action =
@@ -52,7 +52,7 @@ const ProfilPreview = ({ user, onNavigate }) => {
           className={`${action} bg-white/5 text-ink-100 ring-1 ring-white/10 hover:bg-white/10`}
         >
           <User size={16} strokeWidth={2} />
-          Voir mon profil
+          View my profile
         </Link>
 
         <Link
@@ -61,7 +61,7 @@ const ProfilPreview = ({ user, onNavigate }) => {
           className={`${action} bg-white/5 text-ink-100 ring-1 ring-white/10 hover:bg-white/10`}
         >
           <Pencil size={16} strokeWidth={2} />
-          Modifier mon profil
+          Edit my profile
         </Link>
 
         <button
@@ -73,7 +73,7 @@ const ProfilPreview = ({ user, onNavigate }) => {
           className={`${action} bg-transparent text-ink-400 hover:bg-white/5 hover:text-brand-400`}
         >
           <LogOut size={16} strokeWidth={2} />
-          Se déconnecter
+          Sign out
         </button>
       </div>
     </div>

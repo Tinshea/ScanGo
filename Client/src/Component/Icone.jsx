@@ -40,14 +40,14 @@ const Icone = ({ SidePanelfunc }) => {
       {isSearchOpen && (
         <div className="flex items-center gap-1 rounded-full bg-ink-850 pl-4 pr-1 ring-1 ring-white/10 focus-within:ring-brand-400">
           <label htmlFor="recherche-titre" className="sr-only-focusable">
-            Rechercher un manga
+            Search manga
           </label>
           <input
             id="recherche-titre"
             ref={inputRef}
             type="search"
             className="w-40 bg-transparent py-2 text-sm text-ink-100 outline-none placeholder:text-ink-400 sm:w-56"
-            placeholder="Rechercher un titre"
+            placeholder="Search a title"
             value={searchValue}
             onChange={(event) => setSearchValue(event.target.value)}
             onKeyDown={(event) => {
@@ -58,7 +58,7 @@ const Icone = ({ SidePanelfunc }) => {
           <button
             type="button"
             onClick={() => setIsSearchOpen(false)}
-            aria-label="Fermer la recherche"
+            aria-label="Close search"
             className="grid h-8 w-8 place-items-center rounded-full text-ink-400 transition-colors duration-300 hover:text-ink-050"
           >
             <X size={16} strokeWidth={2} />
@@ -70,7 +70,7 @@ const Icone = ({ SidePanelfunc }) => {
         <button
           type="button"
           onClick={() => setIsSearchOpen(true)}
-          aria-label="Ouvrir la recherche"
+          aria-label="Open search"
           className="grid h-10 w-10 place-items-center rounded-full text-ink-300 transition-colors duration-300 hover:bg-ink-850 hover:text-ink-050"
         >
           <Search size={20} strokeWidth={2} />
@@ -80,7 +80,7 @@ const Icone = ({ SidePanelfunc }) => {
       <button
         type="button"
         onClick={SidePanelfunc}
-        aria-label={isAuthenticated ? "Ouvrir mon compte" : "Se connecter"}
+        aria-label={isAuthenticated ? "Open my account" : "Sign in"}
         className="shrink-0 rounded-full transition-transform duration-300 ease-out-expo hover:scale-105"
       >
         <img

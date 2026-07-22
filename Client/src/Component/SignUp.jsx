@@ -17,7 +17,7 @@ const SignUp = ({ handleSwitch }) => {
     const { username, password } = event.target.elements;
 
     if (password.value.length < MIN_PASSWORD_LEN) {
-      setError(`Le mot de passe doit contenir au moins ${MIN_PASSWORD_LEN} caractères.`);
+      setError(`Password must be at least ${MIN_PASSWORD_LEN} characters.`);
       return;
     }
 
@@ -29,7 +29,7 @@ const SignUp = ({ handleSwitch }) => {
 
   return (
     <div>
-      <h2 className="mb-5 text-xl text-ink-050">Créer un compte</h2>
+      <h2 className="mb-5 text-xl text-ink-050">Create an account</h2>
 
       <form onSubmit={handleSignUp} className="flex flex-col gap-4">
         {error && (
@@ -40,7 +40,7 @@ const SignUp = ({ handleSwitch }) => {
 
         <div>
           <label htmlFor="signup-username" className={labelClass}>
-            Nom d&apos;utilisateur
+            Username
           </label>
           <input
             id="signup-username"
@@ -55,7 +55,7 @@ const SignUp = ({ handleSwitch }) => {
 
         <div>
           <label htmlFor="signup-password" className={labelClass}>
-            Mot de passe
+            Password
           </label>
           <input
             id="signup-password"
@@ -66,7 +66,7 @@ const SignUp = ({ handleSwitch }) => {
             required
             className={fieldClass}
           />
-          <p className="mt-1.5 text-xs text-ink-400">8 caractères minimum</p>
+          <p className="mt-1.5 text-xs text-ink-400">8 characters minimum</p>
         </div>
 
         <button
@@ -74,18 +74,18 @@ const SignUp = ({ handleSwitch }) => {
           disabled={isSubmitting}
           className={`mt-1 ${primaryButton}`}
         >
-          {isSubmitting ? "Création..." : "Créer mon compte"}
+          {isSubmitting ? "Creating..." : "Create my account"}
         </button>
       </form>
 
       <p className="mt-5 text-center text-sm text-ink-400">
-        Déjà un compte ?{" "}
+        Already have an account?{" "}
         <button
           type="button"
           onClick={handleSwitch}
           className="font-semibold text-brand-400 hover:underline"
         >
-          Se connecter
+          Sign in
         </button>
       </p>
     </div>

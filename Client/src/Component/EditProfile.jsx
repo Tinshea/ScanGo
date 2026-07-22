@@ -34,12 +34,12 @@ const EditProfile = () => {
     if (!file) return;
 
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      setErrorMessage("Format non supporté (JPEG, PNG, WebP ou GIF attendu).");
+      setErrorMessage("Unsupported format (JPEG, PNG, WebP or GIF expected).");
       event.target.value = "";
       return;
     }
     if (file.size > MAX_IMAGE_BYTES) {
-      setErrorMessage("Image trop volumineuse (5 Mo maximum).");
+      setErrorMessage("Image too large (5 MB maximum).");
       event.target.value = "";
       return;
     }
@@ -58,12 +58,12 @@ const EditProfile = () => {
     setSuccessMessage("");
 
     if (!username && !password && !banner && !profilePicture) {
-      setErrorMessage("Aucune modification à enregistrer.");
+      setErrorMessage("Nothing to save.");
       return;
     }
     if (password && password.length < MIN_PASSWORD_LEN) {
       setErrorMessage(
-        `Le mot de passe doit contenir au moins ${MIN_PASSWORD_LEN} caractères.`
+        `Password must be at least ${MIN_PASSWORD_LEN} characters.`
       );
       return;
     }
@@ -81,11 +81,11 @@ const EditProfile = () => {
     try {
       await api.put("/updateuser", data);
       await refreshUser();
-      setSuccessMessage("Profil mis à jour.");
+      setSuccessMessage("Profile updated.");
       setPassword("");
       setTimeout(() => navigate(`/User/${user?.id}`), 1200);
     } catch (error) {
-      setErrorMessage(messageFromError(error, "La mise à jour a échoué."));
+      setErrorMessage(messageFromError(error, "Update failed."));
     } finally {
       setLoading(false);
     }
@@ -93,9 +93,9 @@ const EditProfile = () => {
 
   return (
     <div className="container-page max-w-xl py-12">
-      <Seo title="Modifier mon profil" path={`/EditProfil/${user?.id ?? ""}`} noindex />
+      <Seo title="Edit my profile" path={`/EditProfil/${user?.id ?? ""}`} noindex />
 
-      <h1 className="mb-8 text-2xl text-ink-050 md:text-3xl">Modifier mon profil</h1>
+      <h1 className="mb-8 text-2xl text-ink-050 md:text-3xl">Edit my profile</h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         {errorMessage && (
@@ -111,7 +111,7 @@ const EditProfile = () => {
 
         <div>
           <label htmlFor="username" className={labelClass}>
-            Nom d&apos;utilisateur
+            Username
           </label>
           <input
             id="username"
@@ -124,13 +124,13 @@ const EditProfile = () => {
             className={fieldClass}
           />
           <p className="mt-1.5 text-xs text-ink-400">
-            Laissez vide pour ne pas changer
+            Leave empty to keep it
           </p>
         </div>
 
         <div>
           <label htmlFor="password" className={labelClass}>
-            Nouveau mot de passe
+            New password
           </label>
           <input
             id="password"
@@ -142,13 +142,13 @@ const EditProfile = () => {
             className={fieldClass}
           />
           <p className="mt-1.5 text-xs text-ink-400">
-            Laissez vide pour ne pas changer, 8 caractères minimum sinon
+            Leave empty to keep it, otherwise 8 characters minimum
           </p>
         </div>
 
         <div>
           <label htmlFor="banner" className={labelClass}>
-            Bannière
+            Banner
           </label>
           <input
             id="banner"
@@ -161,7 +161,7 @@ const EditProfile = () => {
           {bannerPreview && (
             <img
               src={bannerPreview}
-              alt="Aperçu de la bannière"
+              alt="Banner preview"
               className="mt-3 w-full rounded-md ring-1 ring-white/10"
             />
           )}
@@ -171,7 +171,7 @@ const EditProfile = () => {
           {/* htmlFor pointait vers « profilePicture » alors que le champ a pour
               identifiant « ProfilePicture » : le libellé n'était lié à rien. */}
           <label htmlFor="ProfilePicture" className={labelClass}>
-            Photo de profil
+            Profile picture
           </label>
           <input
             id="ProfilePicture"
@@ -186,7 +186,7 @@ const EditProfile = () => {
           {profilePicturePreview && (
             <img
               src={profilePicturePreview}
-              alt="Aperçu de la photo de profil"
+              alt="Profile picture preview"
               className="mt-3 h-24 w-24 rounded-full object-cover ring-1 ring-white/10"
             />
           )}
@@ -198,10 +198,10 @@ const EditProfile = () => {
             onClick={() => navigate(`/User/${user?.id}`)}
             className={`flex-1 ${secondaryButton}`}
           >
-            Annuler
+            Cancel
           </button>
           <button type="submit" disabled={loading} className={`flex-1 ${primaryButton}`}>
-            {loading ? "Enregistrement..." : "Enregistrer"}
+            {loading ? "Saving..." : "Save"}
           </button>
         </div>
       </form>

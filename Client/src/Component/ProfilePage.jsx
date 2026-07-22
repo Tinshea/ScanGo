@@ -40,7 +40,7 @@ const ProfilePage = () => {
         setMangaSeen(detailsRes.data.chaptersSeen || []);
       } catch (err) {
         if (!cancelled) {
-          setError(messageFromError(err, "Impossible de récupérer ce profil."));
+          setError(messageFromError(err, "Could not load this profile."));
         }
       }
     };
@@ -59,7 +59,7 @@ const ProfilePage = () => {
           to="/"
           className="rounded-full bg-brand-500 px-6 py-3 text-sm font-bold whitespace-nowrap text-white transition-colors duration-300 hover:bg-brand-600"
         >
-          Retour à l&apos;accueil
+          Back to home
         </Link>
       </div>
     );
@@ -71,9 +71,9 @@ const ProfilePage = () => {
     <>
       {/* Les profils ne sont pas indexés : contenu personnel. */}
       <Seo
-        title={`Profil de ${profile.username}`}
+        title={`Profile of ${profile.username}`}
         path={`/User/${id}`}
-        description={`Profil de ${profile.username} sur MangaGo.`}
+        description={`Profile of ${profile.username} on MangaGo.`}
         noindex
       />
 
@@ -114,7 +114,7 @@ const ProfilePage = () => {
                 className="inline-flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-sm font-semibold whitespace-nowrap text-ink-100 ring-1 ring-white/10 transition-colors duration-300 hover:bg-white/10"
               >
                 <Pencil size={16} strokeWidth={2} />
-                Modifier mon profil
+                Edit my profile
               </Link>
             )}
           </div>
@@ -123,7 +123,7 @@ const ProfilePage = () => {
 
       <div className="container-page flex flex-col gap-12 py-12">
         <section>
-          <h2 className="mb-4 text-xl text-ink-050">Titres suivis</h2>
+          <h2 className="mb-4 text-xl text-ink-050">Followed titles</h2>
           {followManga?.length > 0 ? (
             <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
               {followManga.map((manga) => (
@@ -131,17 +131,17 @@ const ProfilePage = () => {
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-ink-500">Aucun titre suivi.</p>
+            <p className="text-sm text-ink-500">No followed titles.</p>
           )}
         </section>
 
         <section>
-          <h2 className="mb-4 text-xl text-ink-050">Historique de lecture</h2>
+          <h2 className="mb-4 text-xl text-ink-050">Reading history</h2>
           <DisplayMangaSeen mangaSeenList={mangaSeen} />
         </section>
 
         <section>
-          <h2 className="mb-4 text-xl text-ink-050">Commentaires</h2>
+          <h2 className="mb-4 text-xl text-ink-050">Comments</h2>
           <CommentUser comments={userComments} setComments={setUserComments} />
         </section>
       </div>

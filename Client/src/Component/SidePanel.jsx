@@ -32,7 +32,7 @@ const SidePanel = ({ isOpen, onClose }) => {
       {isOpen && (
         <button
           type="button"
-          aria-label="Fermer le panneau"
+          aria-label="Close panel"
           onClick={onClose}
           className="fixed inset-0 z-40 bg-ink-950/70 backdrop-blur-sm"
         />
@@ -48,7 +48,7 @@ const SidePanel = ({ isOpen, onClose }) => {
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label="Close"
             className="grid h-9 w-9 place-items-center rounded-full text-ink-400 transition-colors duration-300 hover:bg-white/5 hover:text-ink-050"
           >
             <X size={18} strokeWidth={2} />

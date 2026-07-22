@@ -48,18 +48,18 @@ api.interceptors.response.use(
 
 // messageFromError extrait un message lisible d'une erreur axios.
 // Le backend renvoie du texte brut via http.Error, pas toujours du JSON.
-export const messageFromError = (error, fallback = "Une erreur est survenue.") => {
+export const messageFromError = (error, fallback = "Something went wrong.") => {
   if (error.response) {
     const { data } = error.response;
     if (typeof data === "string" && data.trim()) return data.trim();
     if (data?.message) return data.message;
-    if (error.response.status === 401) return "Session expirée, reconnectez-vous.";
-    if (error.response.status === 403) return "Action non autorisée.";
-    if (error.response.status === 404) return "Ressource introuvable.";
-    if (error.response.status >= 500) return "Le serveur est indisponible, réessayez plus tard.";
+    if (error.response.status === 401) return "Session expired, please sign in again.";
+    if (error.response.status === 403) return "Not allowed.";
+    if (error.response.status === 404) return "Not found.";
+    if (error.response.status >= 500) return "The server is unavailable, please try again later.";
   }
-  if (error.code === "ECONNABORTED") return "Le serveur met trop de temps à répondre.";
-  if (error.request) return "Impossible de joindre le serveur.";
+  if (error.code === "ECONNABORTED") return "The server is taking too long to respond.";
+  if (error.request) return "Could not reach the server.";
   return fallback;
 };
 

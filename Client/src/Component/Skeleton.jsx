@@ -13,13 +13,13 @@ SkeletonBlock.propTypes = {
 };
 
 export const SkeletonBanner = () => (
-  <div role="status" aria-label="Chargement des titres à la une">
+  <div role="status" aria-label="Loading featured titles">
     <SkeletonBlock className="skeleton-banner" />
   </div>
 );
 
 export const SkeletonRow = ({ count = 6 }) => (
-  <ul className="skeleton-row" role="status" aria-label="Chargement des titres">
+  <ul className="skeleton-row" role="status" aria-label="Loading titles">
     {Array.from({ length: count }, (_, i) => (
       <li key={i}>
         <SkeletonBlock className="skeleton-card" />
@@ -34,7 +34,7 @@ export const SkeletonGrid = ({ count = 12 }) => (
   <ul
     className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6"
     role="status"
-    aria-label="Chargement des résultats"
+    aria-label="Loading results"
   >
     {Array.from({ length: count }, (_, i) => (
       <li key={i}>

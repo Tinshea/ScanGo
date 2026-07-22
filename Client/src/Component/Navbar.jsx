@@ -24,7 +24,7 @@ const Navbar = () => {
         href="#contenu-principal"
         className="sr-only-focusable fixed left-4 top-4 z-[60] rounded-sm bg-brand-500 px-4 py-2 text-sm font-semibold text-white"
       >
-        Aller au contenu
+        Skip to content
       </a>
 
       {/* Barre sur une seule ligne, hauteur 64px au desktop. */}
@@ -32,7 +32,7 @@ const Navbar = () => {
         <div className="container-page flex h-full items-center justify-between gap-4">
           <Link
             to="/"
-            aria-label="MangaGo, retour à l'accueil"
+            aria-label="MangaGo, back to home"
             className="shrink-0"
           >
             <img src={logo} alt="MangaGo" className="navbar-logo" />

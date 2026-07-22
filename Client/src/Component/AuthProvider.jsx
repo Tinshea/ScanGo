@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }) => {
       } catch (error) {
         // L'erreur est remontée à l'appelant au lieu d'être avalée par un
         // console.error : le formulaire restait muet sur mot de passe erroné.
-        const message = messageFromError(error, "Échec de l'authentification.");
+        const message = messageFromError(error, "Sign in failed.");
         setAuthError(message);
         clearToken();
         return { ok: false, error: message };

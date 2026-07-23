@@ -356,6 +356,9 @@ func fetchChapterPage(ctx context.Context, mangaID string, offset int) ([]models
 	params.Set("translatedLanguage[]", "en")
 	params.Set("limit", strconv.Itoa(chapterPageSize))
 	params.Set("offset", strconv.Itoa(offset))
+	// Le groupe de scanlation est inclus pour pouvoir le créditer : MangaDex
+	// l'exige dès lors qu'on permet la lecture des chapitres.
+	params.Set("includes[]", "scanlation_group")
 
 	var res models.APIResponseChapter
 	if err := mangadex.GetJSON(ctx, "/manga/"+mangaID+"/feed", params, &res); err != nil {
@@ -732,12 +735,16 @@ func GetUserMangaDetails(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// fetchChapterDetails récupère le détail d'un chapitre.
+// fetchChapterDetails récupère le détail d'un chapitre, groupe de scanlation
+// inclus pour permettre son crédit.
 func fetchChapterDetails(ctx context.Context, chapterID string) (models.Chapter, error) {
+	params := url.Values{}
+	params.Set("includes[]", "scanlation_group")
+
 	var res struct {
 		Data models.Chapter `json:"data"`
 	}
-	if err := mangadex.GetJSON(ctx, "/chapter/"+chapterID, nil, &res); err != nil {
+	if err := mangadex.GetJSON(ctx, "/chapter/"+chapterID, params, &res); err != nil {
 		return models.Chapter{}, err
 	}
 	return res.Data, nil

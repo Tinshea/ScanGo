@@ -211,10 +211,14 @@ type TagAttributes struct {
 }
 
 type Chapter struct {
-	ID            string         `json:"id"`
-	Type          string         `json:"type"`
-	Attributes    ChapterDetails `json:"attributes"`
-	Relationships []Relationship `json:"relationships"`
+	ID   string `json:"id"`
+	Type string `json:"type"`
+	// Attributes porte les métadonnées du chapitre.
+	Attributes ChapterDetails `json:"attributes"`
+	// Relationships utilise Relations (et non un type réduit à id + type) pour
+	// conserver les attributs des relations incluses, notamment le nom du
+	// groupe de scanlation, que MangaDex impose de créditer.
+	Relationships []Relations `json:"relationships"`
 }
 
 type ChapterDetails struct {
@@ -231,7 +235,3 @@ type ChapterDetails struct {
 	Version            int       `json:"version"`
 }
 
-type Relationship struct {
-	ID   string `json:"id"`
-	Type string `json:"type"`
-}

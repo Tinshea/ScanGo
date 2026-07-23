@@ -15,6 +15,7 @@ import Seo from "./Seo";
 import ReaderView from "./ReaderView";
 import ReaderSettings from "./ReaderSettings";
 import useReaderSettings, { detectFormat } from "../hooks/useReaderSettings";
+import { getScanlationGroup } from "../utils/mangadex";
 import api, { messageFromError } from "../api";
 
 /**
@@ -360,6 +361,12 @@ const ChapterReader = () => {
   const chapterLabel = current?.attributes?.chapter
     ? `Chapter ${current.attributes.chapter}`
     : "Chapter";
+
+  // Crédit du groupe de scanlation du chapitre en cours. Recherché sur la liste
+  // complète (et non sur sortedChapters, qui écarte les chapitres sans numéro)
+  // pour rester fiable, one-shots compris.
+  const currentChapter = mangaDetails?.chapters?.find((c) => c.id === chapterId);
+  const scanlationGroup = getScanlationGroup(currentChapter);
   const pageTitle = mangaDetails?.title
     ? `${mangaDetails.title}, ${chapterLabel}`
     : chapterLabel;
@@ -502,6 +509,22 @@ const ChapterReader = () => {
         reset={reset}
         detected={detected}
       />
+
+      {/* Crédit du groupe de scanlation : MangaDex l'exige dès qu'on permet la
+          lecture d'un chapitre. */}
+      {!settings.immersif && scanlationGroup && (
+        <p className="container-page pt-6 text-center text-xs text-ink-500">
+          Scanlation by{" "}
+          <a
+            href={scanlationGroup.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-ink-300 transition-colors duration-200 hover:text-brand-400"
+          >
+            {scanlationGroup.name}
+          </a>
+        </p>
+      )}
 
       {!settings.immersif && (
         <div className="container-page flex flex-wrap items-center justify-center gap-3 py-8">

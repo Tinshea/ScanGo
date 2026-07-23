@@ -11,6 +11,7 @@ import ShowTag from "./Component/ShowTag";
 import Browse from "./Component/Browse";
 import ProtectedRoute from "./Component/ProtectedRoute";
 import NotFound from "./Component/NotFound";
+import Footer from "./Component/Footer";
 
 function App() {
   return (
@@ -44,6 +45,8 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
+
+        <Footer />
       </div>
     </Router>
   );

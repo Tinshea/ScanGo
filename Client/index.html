@@ -11,12 +11,40 @@
     <meta name="theme-color" content="#050816" />
     <meta name="color-scheme" content="dark" />
 
-    <!-- Titre de repli, avant que React ne prenne la main. Les balises
-         description, canonical et Open Graph sont volontairement absentes
-         d'ici : posées en dur, elles précédaient dans le DOM celles générées
-         par route, et les moteurs retenaient la première occurrence. Le
-         composant Seo en est désormais l'unique source. -->
+    <!-- Titre de repli, avant que React ne prenne la main. La description et la
+         balise canonique restent gérées par route dans le composant Seo. -->
     <title>MangaGo, read manga online</title>
+
+    <!-- Carte de partage par défaut.
+
+         Les robots des réseaux sociaux (Discord, X, Facebook, iMessage,
+         WhatsApp, Slack...) n'exécutent pas le JavaScript : ils ne voient donc
+         jamais les balises Open Graph injectées par React via react-helmet.
+         Sans ces balises STATIQUES, un lien partagé ne montre aucun aperçu.
+
+         Elles décrivent la carte par défaut du site ; le composant Seo affine
+         ces valeurs par page pour les moteurs capables de rendre React (Google).
+         L'URL doit pointer vers le domaine réellement déployé. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="MangaGo" />
+    <meta property="og:title" content="MangaGo, read manga online" />
+    <meta
+      property="og:description"
+      content="Full catalogue, latest releases, genre search, and an immersive reader."
+    />
+    <meta property="og:url" content="https://scan-go-lake.vercel.app/" />
+    <meta property="og:image" content="https://scan-go-lake.vercel.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="MangaGo — read manga online" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="MangaGo, read manga online" />
+    <meta
+      name="twitter:description"
+      content="Full catalogue, latest releases, genre search, and an immersive reader."
+    />
+    <meta name="twitter:image" content="https://scan-go-lake.vercel.app/og-image.png" />
 
     <!-- Préconnexions vers les hôtes d'images, qui servent chaque couverture. -->
     <link rel="preconnect" href="https://uploads.mangadex.org" />

@@ -6,6 +6,9 @@ const SITE_NAME = "MangaGo";
 const ORIGIN = "https://scan-go-lake.vercel.app";
 const DEFAULT_DESCRIPTION =
   "Read manga online on MangaGo. Full catalogue, latest releases, genre search, immersive reader and reading history.";
+// Carte de partage par défaut, servie depuis public/. Les pages qui ont leur
+// propre visuel (une couverture de titre) passent la leur via `image`.
+const DEFAULT_OG_IMAGE = `${ORIGIN}/og-image.png`;
 
 /**
  * Métadonnées par route.
@@ -34,6 +37,8 @@ const Seo = ({
 
   const fullTitle = cleanTitle ? `${cleanTitle} | ${SITE_NAME}` : SITE_NAME;
   const canonical = `${ORIGIN}${path}`;
+  // Toujours fournir un visuel : à défaut de couverture, la carte de marque.
+  const ogImage = image || DEFAULT_OG_IMAGE;
   const truncated =
     cleanDescription.length > 160
       ? `${cleanDescription.slice(0, 157)}...`
@@ -56,12 +61,12 @@ const Seo = ({
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={truncated} />
       <meta property="og:url" content={canonical} />
-      {image && <meta property="og:image" content={image} />}
+      <meta property="og:image" content={ogImage} />
 
-      <meta name="twitter:card" content={image ? "summary_large_image" : "summary"} />
+      <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={truncated} />
-      {image && <meta name="twitter:image" content={image} />}
+      <meta name="twitter:image" content={ogImage} />
 
       {jsonLd && (
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>

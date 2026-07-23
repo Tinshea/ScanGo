@@ -30,7 +30,7 @@ const ProfilePage = () => {
         const [profileRes, commentsRes, detailsRes] = await Promise.all([
           api.get("/User", { params: { id } }),
           api.get("/user/info/comment", { params: { userId: id } }),
-          api.get("/user/info/", { params: { id } }),
+          api.get("/user/info", { params: { id } }),
         ]);
 
         if (cancelled) return;

@@ -59,7 +59,7 @@ const MangaDetails = () => {
     const nextState = !isFollowing;
     setIsSubmitting(true);
     try {
-      await api.post(nextState ? "/user/follow/" : "/user/unfollow/", {
+      await api.post(nextState ? "/user/follow" : "/user/unfollow", {
         mangaId: id,
       });
       setFollowing(id, nextState);

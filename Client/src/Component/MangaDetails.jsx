@@ -92,6 +92,28 @@ const MangaDetails = () => {
   const status = STATUS_LABELS[manga.status] || manga.status;
   const firstChapter = manga.chapters?.[manga.chapters.length - 1];
 
+  // Historique de lecture de ce titre. Le backend renvoie les chapitres du plus
+  // récent au plus ancien : l'ordre de lecture est donc l'ordre inverse.
+  const readEntry = user?.mangas?.find((entry) => entry.mangaId === id);
+  const readChapters = new Set(readEntry?.chapters || []);
+  const hasStarted = readChapters.size > 0;
+  const readingOrder = manga.chapters ? [...manga.chapters].reverse() : [];
+  // Reprise = premier chapitre non encore lu dans l'ordre de lecture.
+  const resumeChapter = readingOrder.find((chapter) => !readChapters.has(chapter.id)) || null;
+
+  // Cible et libellé de l'appel à l'action principal.
+  const ctaChapter = resumeChapter || firstChapter;
+  let ctaLabel = "Start reading";
+  if (hasStarted) {
+    if (resumeChapter) {
+      const number = resumeChapter.attributes?.chapter;
+      ctaLabel = number != null ? `Continue · Ch. ${number}` : "Continue reading";
+    } else {
+      // Tout est lu : proposer une relecture depuis le début.
+      ctaLabel = "Read again";
+    }
+  }
+
   return (
     <>
       <Seo
@@ -157,7 +179,7 @@ const MangaDetails = () => {
                   {status}
                   {manga.year > 0 && ` · ${manga.year}`}
                   {manga.chapters?.length > 0 &&
-                    ` · ${manga.chapters.length} chapitre${manga.chapters.length > 1 ? "s" : ""}`}
+                    ` · ${manga.chapters.length} chapter${manga.chapters.length > 1 ? "s" : ""}`}
                 </p>
               </div>
 
@@ -179,12 +201,12 @@ const MangaDetails = () => {
               <div className="flex flex-wrap gap-3">
                 {firstChapter ? (
                   <Link
-                    to={`/chapter/${firstChapter.id}`}
+                    to={`/chapter/${ctaChapter.id}`}
                     state={{ mangaDetails: manga }}
                     className="inline-flex items-center gap-2 rounded-full bg-brand-500 px-6 py-3 text-sm font-bold whitespace-nowrap text-white transition-colors duration-300 hover:bg-brand-600"
                   >
                     <BookOpen size={18} strokeWidth={2} />
-                    Start reading
+                    {ctaLabel}
                   </Link>
                 ) : (
                   <span className="inline-flex items-center rounded-full bg-ink-850 px-6 py-3 text-sm font-semibold text-ink-400">
@@ -217,7 +239,7 @@ const MangaDetails = () => {
 
       <section className="container-page py-12 md:py-16">
         <h2 className="mb-5 text-2xl text-ink-050">Chapters</h2>
-        <ChapterList mangaDetails={manga} />
+        <ChapterList mangaDetails={manga} readChapters={readChapters} />
       </section>
     </>
   );

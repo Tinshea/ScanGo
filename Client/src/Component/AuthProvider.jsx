@@ -99,6 +99,26 @@ export const AuthProvider = ({ children }) => {
     return loadUser(user.id);
   }, [user?.id, loadUser]);
 
+  // markChapterRead ajoute un chapitre à l'historique local dès sa lecture,
+  // sans attendre un rechargement du profil : les coches « lu » de la fiche et
+  // du lecteur apparaissent aussitôt.
+  const markChapterRead = useCallback((mangaId, chapterId) => {
+    if (!mangaId || !chapterId) return;
+    setUser((prev) => {
+      if (!prev) return prev;
+      const mangas = prev.mangas ? [...prev.mangas] : [];
+      const index = mangas.findIndex((entry) => entry.mangaId === mangaId);
+      if (index === -1) {
+        mangas.push({ mangaId, chapters: [chapterId] });
+      } else {
+        const entry = mangas[index];
+        if (entry.chapters?.includes(chapterId)) return prev;
+        mangas[index] = { ...entry, chapters: [...(entry.chapters || []), chapterId] };
+      }
+      return { ...prev, mangas };
+    });
+  }, []);
+
   // setFollowing met à jour la liste des titres suivis sans recharger le
   // profil complet.
   const setFollowing = useCallback((mangaId, following) => {
@@ -125,6 +145,7 @@ export const AuthProvider = ({ children }) => {
       signOut,
       refreshUser,
       setFollowing,
+      markChapterRead,
     }),
     [
       isAuthenticated,
@@ -136,6 +157,7 @@ export const AuthProvider = ({ children }) => {
       signOut,
       refreshUser,
       setFollowing,
+      markChapterRead,
     ]
   );
 

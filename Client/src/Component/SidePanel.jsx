@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { AuthContext } from "./AuthContext";
 import SignInPage from "./SignInPage";
 import ProfilPreview from "./ProfilPreview";
+import useBodyScrollLock from "../hooks/useBodyScrollLock";
 
 /**
  * Panneau latéral du compte.
@@ -17,6 +18,8 @@ import ProfilPreview from "./ProfilPreview";
  */
 const SidePanel = ({ isOpen, onClose }) => {
   const { isAuthenticated, user } = useContext(AuthContext);
+
+  useBodyScrollLock(isOpen);
 
   useEffect(() => {
     if (!isOpen) return undefined;

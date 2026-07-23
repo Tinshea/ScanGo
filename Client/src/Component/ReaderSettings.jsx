@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import PropTypes from "prop-types";
 import { X, RotateCcw } from "lucide-react";
+import useBodyScrollLock from "../hooks/useBodyScrollLock";
 
 /**
  * Panneau de réglages du lecteur.
@@ -57,6 +58,8 @@ Choice.propTypes = {
 };
 
 const ReaderSettings = ({ open, onClose, settings, update, reset, detected }) => {
+  useBodyScrollLock(open);
+
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (event) => {

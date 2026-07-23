@@ -39,7 +39,11 @@ const Pagination = ({
         <ChevronLeft size={18} strokeWidth={2} />
       </button>
 
-      <ul className="flex items-center gap-1">
+      {/* Sur mobile, la fenêtre complète (jusqu'à neuf numéros plus les
+          flèches) débordait la largeur de l'écran : la liste numérotée est donc
+          réservée aux écrans « sm » et plus, remplacée par un indicateur
+          compact en dessous. */}
+      <ul className="hidden items-center gap-1 sm:flex">
         {items.map((item) =>
           typeof item === "number" ? (
             <li key={item}>
@@ -70,6 +74,12 @@ const Pagination = ({
           )
         )}
       </ul>
+
+      {/* Indicateur compact pour mobile : lu par les lecteurs d'écran puisque
+          la liste numérotée est masquée à cette taille. */}
+      <span className="px-3 text-sm font-semibold tabular-nums text-ink-300 sm:hidden">
+        Page {currentPage} / {totalPages}
+      </span>
 
       <button
         type="button"

@@ -1,8 +1,12 @@
 import { useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
-import { ArrowDownUp, Search, ChevronDown } from "lucide-react";
+import { ArrowDownUp, Search, ChevronDown, Check } from "lucide-react";
 import { timeSince, cleanText } from "../utils/date";
+
+// Ensemble vide partagé : évite de recréer un Set à chaque rendu lorsque le
+// lecteur n'est pas connecté ou n'a lu aucun chapitre.
+const EMPTY_SET = new Set();
 
 /**
  * Liste des chapitres d'un titre.
@@ -22,7 +26,7 @@ import { timeSince, cleanText } from "../utils/date";
 
 const NO_VOLUME = "__hors_volume__";
 
-const ChapterList = ({ mangaDetails }) => {
+const ChapterList = ({ mangaDetails, readChapters = EMPTY_SET }) => {
   const [isAscending, setIsAscending] = useState(false);
   const [filter, setFilter] = useState("");
 
@@ -102,8 +106,8 @@ const ChapterList = ({ mangaDetails }) => {
       </div>
 
       <p className="text-xs text-ink-500">
-        {visible.length} chapitre{visible.length > 1 ? "s" : ""}
-        {isFiltering && ` sur ${chapters.length}`}
+        {visible.length} chapter{visible.length > 1 ? "s" : ""}
+        {isFiltering && ` of ${chapters.length}`}
         {!isFiltering && groups.length > 1 && ` across ${groups.length} volumes`}
       </p>
 
@@ -126,7 +130,7 @@ const ChapterList = ({ mangaDetails }) => {
                 <span>
                   {volume === NO_VOLUME ? "Ungrouped chapters" : `Volume ${volume}`}
                   <span className="ml-2 font-normal text-ink-500">
-                    {items.length} chapitre{items.length > 1 ? "s" : ""}
+                    {items.length} chapter{items.length > 1 ? "s" : ""}
                   </span>
                 </span>
                 <ChevronDown
@@ -141,20 +145,42 @@ const ChapterList = ({ mangaDetails }) => {
                 {items.map((chapter) => {
                   const number = chapter.attributes?.chapter;
                   const chapterTitle = cleanText(chapter.attributes?.title || "");
+                  // Un chapitre déjà lu est estompé et coché : le lecteur repère
+                  // d'un coup d'œil où il en est dans une longue série.
+                  const isRead = readChapters.has(chapter.id);
 
                   return (
                     <li key={chapter.id}>
                       <Link
                         to={`/chapter/${chapter.id}`}
                         state={{ mangaDetails }}
+                        aria-label={
+                          isRead
+                            ? `${number != null ? `Chapter ${number}` : "Chapter"}, already read`
+                            : undefined
+                        }
                         className="flex items-center justify-between gap-4 px-4 py-2.5 transition-colors duration-200 hover:bg-ink-850"
                       >
-                        <span className="min-w-0 truncate text-sm text-ink-200">
-                          {number != null ? `Chapter ${number}` : "Chapter"}
-                          {/* Le deux-points n'apparaît que s'il précède un
-                              intitulé réel, ce qui supprime les
-                              « Chapitre 63: » orphelins. */}
-                          {chapterTitle ? ` : ${chapterTitle}` : ""}
+                        <span className="flex min-w-0 items-center gap-2">
+                          {isRead && (
+                            <Check
+                              size={14}
+                              strokeWidth={2.5}
+                              aria-hidden="true"
+                              className="shrink-0 text-brand-400"
+                            />
+                          )}
+                          <span
+                            className={`truncate text-sm ${
+                              isRead ? "text-ink-500" : "text-ink-200"
+                            }`}
+                          >
+                            {number != null ? `Chapter ${number}` : "Chapter"}
+                            {/* Le deux-points n'apparaît que s'il précède un
+                                intitulé réel, ce qui supprime les
+                                « Chapitre 63: » orphelins. */}
+                            {chapterTitle ? ` : ${chapterTitle}` : ""}
+                          </span>
                         </span>
 
                         <time
@@ -178,6 +204,8 @@ const ChapterList = ({ mangaDetails }) => {
 
 ChapterList.propTypes = {
   mangaDetails: PropTypes.object,
+  // Ensemble des identifiants de chapitres déjà lus par l'utilisateur.
+  readChapters: PropTypes.instanceOf(Set),
 };
 
 export default ChapterList;

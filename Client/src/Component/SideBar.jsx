@@ -1,7 +1,10 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
-import { Link } from "react-router-dom";
-import { Menu, X, ArrowLeft } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+import { Menu, X, ArrowLeft, Check } from "lucide-react";
+import useBodyScrollLock from "../hooks/useBodyScrollLock";
+
+const EMPTY_SET = new Set();
 
 /**
  * Panneau de navigation du lecteur : retour à la fiche et liste des chapitres.
@@ -9,9 +12,12 @@ import { Menu, X, ArrowLeft } from "lucide-react";
  * Le bouton d'ouverture est réduit à une pastille discrète en haut à gauche
  * pour ne pas empiéter sur la lecture.
  */
-const Sidebar = ({ mangaDetails }) => {
+const Sidebar = ({ mangaDetails, readChapters = EMPTY_SET }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { chapterId } = useParams();
   const chapters = mangaDetails?.chapters ?? [];
+
+  useBodyScrollLock(isOpen);
 
   return (
     <>
@@ -70,20 +76,42 @@ const Sidebar = ({ mangaDetails }) => {
             <p className="px-1 text-sm text-ink-400">No chapters available.</p>
           ) : (
             <ol className="flex flex-col gap-1">
-              {chapters.map((chapter) => (
-                <li key={chapter.id}>
-                  <Link
-                    to={`/chapter/${chapter.id}`}
-                    state={{ mangaDetails }}
-                    onClick={() => setIsOpen(false)}
-                    className="block truncate rounded-sm px-3 py-2 text-sm text-ink-300 transition-colors duration-200 hover:bg-white/5 hover:text-ink-050"
-                  >
-                    {chapter.attributes?.chapter != null
-                      ? `Chapter ${chapter.attributes.chapter}`
-                      : "Chapter"}
-                  </Link>
-                </li>
-              ))}
+              {chapters.map((chapter) => {
+                const isCurrent = chapter.id === chapterId;
+                const isRead = readChapters.has(chapter.id);
+                const label =
+                  chapter.attributes?.chapter != null
+                    ? `Chapter ${chapter.attributes.chapter}`
+                    : "Chapter";
+
+                return (
+                  <li key={chapter.id}>
+                    <Link
+                      to={`/chapter/${chapter.id}`}
+                      state={{ mangaDetails }}
+                      onClick={() => setIsOpen(false)}
+                      aria-current={isCurrent ? "page" : undefined}
+                      className={`flex items-center justify-between gap-2 rounded-sm px-3 py-2 text-sm transition-colors duration-200 ${
+                        isCurrent
+                          ? "bg-brand-500/15 font-semibold text-ink-050 ring-1 ring-brand-500/30"
+                          : isRead
+                            ? "text-ink-500 hover:bg-white/5 hover:text-ink-050"
+                            : "text-ink-300 hover:bg-white/5 hover:text-ink-050"
+                      }`}
+                    >
+                      <span className="truncate">{label}</span>
+                      {isRead && !isCurrent && (
+                        <Check
+                          size={14}
+                          strokeWidth={2.5}
+                          aria-hidden="true"
+                          className="shrink-0 text-brand-400"
+                        />
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
             </ol>
           )}
         </nav>
@@ -94,6 +122,8 @@ const Sidebar = ({ mangaDetails }) => {
 
 Sidebar.propTypes = {
   mangaDetails: PropTypes.object,
+  // Identifiants des chapitres déjà lus, signalés d'une coche dans la liste.
+  readChapters: PropTypes.instanceOf(Set),
 };
 
 export default Sidebar;

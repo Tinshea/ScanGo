@@ -42,9 +42,8 @@ const DisplayMangaSeen = ({ mangaSeenList }) => {
                     {cleanText(manga.title)}
                   </h3>
                   <p className="mt-1 text-2xs text-ink-400">
-                    {manga.chapters?.length || 0} chapitre
-                    {manga.chapters?.length > 1 ? "s" : ""} lu
-                    {manga.chapters?.length > 1 ? "s" : ""}
+                    {manga.chapters?.length || 0} chapter
+                    {manga.chapters?.length > 1 ? "s" : ""} read
                   </p>
                 </div>
               </div>

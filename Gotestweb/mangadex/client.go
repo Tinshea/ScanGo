@@ -39,7 +39,22 @@ const maxResponseBytes = 16 << 20 // 16 Mio
 // bloquée indéfiniment par requête entrante.
 const requestTimeout = 15 * time.Second
 
-var client = &http.Client{Timeout: requestTimeout}
+// Tous les appels visent le même hôte (api.mangadex.org). Le Transport par
+// défaut plafonne à MaxIdleConnsPerHost = 2 : dès qu'on parallélise, la
+// plupart des requêtes rouvrent une connexion TCP+TLS (~100-300 ms perdus).
+// On élargit donc le pool de connexions réutilisables vers cet hôte unique.
+var client = &http.Client{
+	Timeout: requestTimeout,
+	Transport: &http.Transport{
+		Proxy:                 http.ProxyFromEnvironment,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          64,
+		MaxIdleConnsPerHost:   32,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	},
+}
 
 // Erreurs distinguées pour permettre aux handlers de choisir le bon statut.
 var (

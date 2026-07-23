@@ -2,10 +2,10 @@ import PropTypes from "prop-types";
 import { Helmet } from "react-helmet-async";
 import { cleanText } from "../utils/date";
 
-const SITE_NAME = "MangaGo";
-const ORIGIN = "https://scan-go-lake.vercel.app";
+const SITE_NAME = "ScanGo";
+const ORIGIN = "https://scango.malekbouzarkouna.com";
 const DEFAULT_DESCRIPTION =
-  "Read manga online on MangaGo. Full catalogue, latest releases, genre search, immersive reader and reading history.";
+  "Read manga online on ScanGo. Full catalogue, latest releases, genre search, immersive reader and reading history.";
 // Carte de partage par défaut, servie depuis public/. Les pages qui ont leur
 // propre visuel (une couverture de titre) passent la leur via `image`.
 const DEFAULT_OG_IMAGE = `${ORIGIN}/og-image.png`;

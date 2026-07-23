@@ -22,9 +22,9 @@ const CRAWLER =
   /facebookexternalhit|Facebot|Twitterbot|Slackbot|Discordbot|WhatsApp|TelegramBot|LinkedInBot|Pinterest|redditbot|Embedly|vkShare|SkypeUriPreview|Applebot|Iframely|Mastodon/i;
 
 const BACKEND = process.env.BACKEND_URL || "https://scango-jlfs.onrender.com";
-const SITE_NAME = "MangaGo";
+const SITE_NAME = "ScanGo";
 const DEFAULT_DESCRIPTION =
-  "Read manga online on MangaGo. Full catalogue, latest releases and an immersive reader.";
+  "Read manga online on ScanGo. Full catalogue, latest releases and an immersive reader.";
 
 // Neutralise les caractères qui casseraient les attributs HTML.
 const escapeHtml = (value = "") =>

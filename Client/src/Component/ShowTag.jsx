@@ -66,7 +66,7 @@ const ShowTag = () => {
       <Seo
         title={`${query} manga`}
         path={`/tag/${encodeURIComponent(query)}`}
-        description={`All manga in the ${query} genre, read online on MangaGo.`}
+        description={`All manga in the ${query} genre, read online on ScanGo.`}
       />
 
       <header className="mb-8 border-b border-white/5 pb-6">

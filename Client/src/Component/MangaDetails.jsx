@@ -123,7 +123,7 @@ const MangaDetails = () => {
         type="book"
         description={
           description ||
-          `Read ${title} online on MangaGo. ${manga.chapters?.length || 0} chapters available.`
+          `Read ${title} online on ScanGo. ${manga.chapters?.length || 0} chapters available.`
         }
         jsonLd={{
           "@context": "https://schema.org",

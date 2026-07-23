@@ -29,7 +29,7 @@ const BaseURL = "https://api.mangadex.org"
 const UploadsURL = "https://uploads.mangadex.org"
 
 // MangaDex exige un User-Agent identifiable et bloque les clients anonymes.
-const userAgent = "ScanGo/1.0 (+https://scan-go-five.vercel.app)"
+const userAgent = "ScanGo/1.0 (+https://scango.malekbouzarkouna.com)"
 
 // maxResponseBytes plafonne la taille d'une réponse pour éviter qu'un
 // contenu inattendu ne fasse gonfler la mémoire du serveur.

@@ -80,7 +80,7 @@ const Browse = () => {
       <Seo
         title={meta.title}
         path={`/browse/${section}`}
-        description={`${meta.subtitle} on MangaGo. Browse ${total > 0 ? total.toLocaleString("en-US") : "thousands of"} titles.`}
+        description={`${meta.subtitle} on ScanGo. Browse ${total > 0 ? total.toLocaleString("en-US") : "thousands of"} titles.`}
       />
 
       {/* En-tête aligné à gauche plutôt que centré : la lecture d'un catalogue

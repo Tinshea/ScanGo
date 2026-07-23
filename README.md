@@ -1,6 +1,6 @@
 <div align="center">
 
-# 📚 ScanGo — MangaGo
+# 📚 ScanGo
 
 **A full-stack manga reader inspired by MangaDex.**
 Real-time catalogue, an immersive chapter reader, accounts, reading history and social features.

@@ -76,7 +76,7 @@ const ShowSearch = () => {
       <Seo
         title={`Search: ${query}`}
         path={`/search/${encodeURIComponent(query)}`}
-        description={`Search results for ${query} on MangaGo.`}
+        description={`Search results for ${query} on ScanGo.`}
         noindex
       />
 

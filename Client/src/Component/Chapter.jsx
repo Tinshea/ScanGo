@@ -377,8 +377,8 @@ const ChapterReader = () => {
         path={`/chapter/${chapterId}`}
         description={
           mangaDetails?.title
-            ? `Read ${chapterLabel} de ${mangaDetails.title} online on MangaGo.`
-            : "Chapter reader on MangaGo."
+            ? `Read ${chapterLabel} de ${mangaDetails.title} online on ScanGo.`
+            : "Chapter reader on ScanGo."
         }
         noindex
       />

@@ -90,7 +90,7 @@ const ChapterReader = () => {
 
         if (isAuthenticated && mangaId) {
           api
-            .post("/user/chapter/", { mangaId, chapterId })
+            .post("/user/chapter", { mangaId, chapterId })
             .then(() => markChapterRead(mangaId, chapterId))
             .catch(() => {});
         }

@@ -88,14 +88,14 @@ func routes() *http.ServeMux {
 	mux.HandleFunc("/api/signup", public(Controllers.SignUp))
 	mux.HandleFunc("/api/signin", public(Controllers.SignIn))
 	mux.HandleFunc("/api/User", public(Controllers.GetUser))
-	mux.HandleFunc("/api/user/info/", public(Controllers.GetUserMangaDetails))
+	mux.HandleFunc("/api/user/info", public(Controllers.GetUserMangaDetails))
 	mux.HandleFunc("/api/user/info/comment", public(Controllers.GetUserComments))
 
 	// --- Routes protégées (toute écriture) ---
 	mux.HandleFunc("/api/updateuser", private(Controllers.UpdateUser))
-	mux.HandleFunc("/api/user/chapter/", private(Controllers.UpdateUserChapter))
-	mux.HandleFunc("/api/user/follow/", private(Controllers.FollowManga))
-	mux.HandleFunc("/api/user/unfollow/", private(Controllers.UnfollowManga))
+	mux.HandleFunc("/api/user/chapter", private(Controllers.UpdateUserChapter))
+	mux.HandleFunc("/api/user/follow", private(Controllers.FollowManga))
+	mux.HandleFunc("/api/user/unfollow", private(Controllers.UnfollowManga))
 
 	// HandleComment gère lui-même l'authentification : la lecture des
 	// commentaires est publique, l'écriture et la suppression ne le sont pas.

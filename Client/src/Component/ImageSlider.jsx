@@ -7,6 +7,7 @@ import "../Css/ImageSlider.css";
 import { SkeletonBanner } from "./Skeleton";
 import usePrefersReducedMotion from "../hooks/usePrefersReducedMotion";
 import { cleanText } from "../utils/date";
+import { proxyImage } from "../utils/mangadex";
 
 // Le résumé était tronqué à 200 caractères, ce qui produisait jusqu'à six
 // lignes dans le héros. Le Pre-Flight impose un sous-texte de 20 mots et 4
@@ -61,7 +62,7 @@ const ImageSlider = ({ mangaList }) => {
             <div className="relative h-[62vh] min-h-[26rem] w-full overflow-hidden">
               <img
                 referrerPolicy="no-referrer"
-                src={slide.image}
+                src={proxyImage(slide.image)}
                 alt={cleanText(slide.title)}
                 decoding="async"
                 className="h-full w-full object-cover object-[center_25%]"

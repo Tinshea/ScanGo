@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import { cleanText } from "../utils/date";
+import { proxyImage } from "../utils/mangadex";
 
 /**
  * Carte d'un manga dans une grille ou une rangée.
@@ -37,7 +38,7 @@ export default function Manga({ mangaData, headingLevel = "h3", className = "" }
               referrerPolicy="no-referrer"
               loading="lazy"
               decoding="async"
-              src={mangaData.image}
+              src={proxyImage(mangaData.image)}
               alt={title}
               className="h-full w-full object-cover transition-transform duration-700 ease-out-expo group-hover:scale-[1.04]"
             />

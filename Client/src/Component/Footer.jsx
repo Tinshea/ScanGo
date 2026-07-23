@@ -30,10 +30,10 @@ const Footer = () => (
       <p>
         Are you a scanlation group and want your work removed? Email{" "}
         <a
-          href="mailto:contact@scango.malekbouzarkouna.com"
+          href="mailto:malek.bouzarkouna@proton.me"
           className="font-semibold text-ink-300 transition-colors duration-200 hover:text-brand-400"
         >
-          contact@scango.malekbouzarkouna.com
+          malek.bouzarkouna@proton.me
         </a>
         .
       </p>

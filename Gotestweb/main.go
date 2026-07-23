@@ -81,6 +81,9 @@ func routes() *http.ServeMux {
 	mux.HandleFunc("/api/Manga", public(Controllers.GetManga))
 	mux.HandleFunc("/api/browse", public(Controllers.BrowseManga))
 	mux.HandleFunc("/api/chapter/pages", public(Controllers.GetChapterPages))
+	// Relais d'images : couvertures et planches passent par le service au lieu
+	// d'être chargées directement depuis les hôtes de MangaDex.
+	mux.HandleFunc("/api/image", public(Controllers.ProxyImage))
 	mux.HandleFunc("/api/tags", public(Controllers.GetTags))
 	mux.HandleFunc("/api/signup", public(Controllers.SignUp))
 	mux.HandleFunc("/api/signin", public(Controllers.SignIn))

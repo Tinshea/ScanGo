@@ -15,7 +15,7 @@ import Seo from "./Seo";
 import ReaderView from "./ReaderView";
 import ReaderSettings from "./ReaderSettings";
 import useReaderSettings, { detectFormat } from "../hooks/useReaderSettings";
-import { getScanlationGroup } from "../utils/mangadex";
+import { getScanlationGroup, proxyImage } from "../utils/mangadex";
 import api, { messageFromError } from "../api";
 
 /**
@@ -135,7 +135,8 @@ const ChapterReader = () => {
       if (next) {
         const img = new Image();
         img.referrerPolicy = "no-referrer";
-        img.src = next;
+        // Même URL relayée que celle affichée, pour précharger le bon cache.
+        img.src = proxyImage(next);
       }
     });
   }, [isPaged, pageIndex, pages]);

@@ -8,6 +8,7 @@ import PopupComponent from "./PopupComponent";
 import Seo from "./Seo";
 import api, { messageFromError } from "../api";
 import { cleanText } from "../utils/date";
+import { proxyImage } from "../utils/mangadex";
 
 // Libellés de statut. L'interface affichait la valeur brute de l'API, en
 // anglais et en minuscules, au milieu d'une interface française.
@@ -149,7 +150,7 @@ const MangaDetails = () => {
         <div className="absolute inset-0 h-[40vh] overflow-hidden">
           <img
             referrerPolicy="no-referrer"
-            src={manga.image}
+            src={proxyImage(manga.image)}
             alt=""
             aria-hidden="true"
             className="h-full w-full scale-110 object-cover object-[center_25%] blur-2xl saturate-150"
@@ -164,7 +165,7 @@ const MangaDetails = () => {
             <div className="mx-auto w-44 shrink-0 md:mx-0 md:w-full">
               <img
                 referrerPolicy="no-referrer"
-                src={manga.image}
+                src={proxyImage(manga.image)}
                 alt={`Cover of ${title}`}
                 className="w-full rounded-lg shadow-[0_24px_60px_-20px_rgba(0,0,0,0.9)] ring-1 ring-white/10"
               />

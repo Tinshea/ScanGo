@@ -16,6 +16,18 @@ export default [
     },
   },
   {
+    // Middleware Edge de Vercel : runtime Web (fetch, Response, URL) plus
+    // process.env pour la configuration.
+    files: ['middleware.js'],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.browser },
+      parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+    },
+    rules: {
+      ...js.configs.recommended.rules,
+    },
+  },
+  {
     files: ['src/**/*.{js,jsx}'],
     languageOptions: {
       ecmaVersion: 2020,

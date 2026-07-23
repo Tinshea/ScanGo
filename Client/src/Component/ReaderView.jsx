@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
+import { proxyImage } from "../utils/mangadex";
 
 /**
  * Surface d'affichage des planches.
@@ -86,7 +87,7 @@ const ReaderView = ({
             return (
               <img
                 key={url}
-                src={url}
+                src={proxyImage(url)}
                 alt={`Page ${index + 1}`}
                 referrerPolicy="no-referrer"
                 decoding="async"
@@ -128,7 +129,7 @@ const ReaderView = ({
             className={isWebtoon ? "" : "mb-1"}
           >
             <img
-              src={url}
+              src={proxyImage(url)}
               alt={`Page ${index + 1}`}
               referrerPolicy="no-referrer"
               // Les trois premières planches sont chargées immédiatement, les

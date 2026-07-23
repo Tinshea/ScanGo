@@ -15,6 +15,7 @@ import Seo from "./Seo";
 import ReaderView from "./ReaderView";
 import ReaderSettings from "./ReaderSettings";
 import useReaderSettings, { detectFormat } from "../hooks/useReaderSettings";
+import { getScanlationGroup, proxyImage } from "../utils/mangadex";
 import api, { messageFromError } from "../api";
 
 /**
@@ -34,12 +35,18 @@ const ChapterReader = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const { settings, update, reset } = useReaderSettings();
-  const { isAuthenticated } = useContext(AuthContext);
+  const { isAuthenticated, user, markChapterRead } = useContext(AuthContext);
   const { chapterId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
 
   const [mangaDetails, setMangaDetails] = useState(location.state?.mangaDetails || null);
+
+  // Chapitres déjà lus de ce titre, pour les signaler dans la liste latérale.
+  const readChapters = useMemo(() => {
+    const entry = user?.mangas?.find((m) => m.mangaId === mangaDetails?.id);
+    return new Set(entry?.chapters || []);
+  }, [user?.mangas, mangaDetails?.id]);
   const [comments, setComments] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [commentError, setCommentError] = useState("");
@@ -82,7 +89,10 @@ const ChapterReader = () => {
         }
 
         if (isAuthenticated && mangaId) {
-          api.post("/user/chapter/", { mangaId, chapterId }).catch(() => {});
+          api
+            .post("/user/chapter/", { mangaId, chapterId })
+            .then(() => markChapterRead(mangaId, chapterId))
+            .catch(() => {});
         }
       } catch (error) {
         if (!cancelled) {
@@ -97,7 +107,7 @@ const ChapterReader = () => {
     return () => {
       cancelled = true;
     };
-  }, [chapterId, isAuthenticated, location.state?.mangaDetails]);
+  }, [chapterId, isAuthenticated, location.state?.mangaDetails, markChapterRead]);
 
   useEffect(() => {
     let cancelled = false;
@@ -125,7 +135,8 @@ const ChapterReader = () => {
       if (next) {
         const img = new Image();
         img.referrerPolicy = "no-referrer";
-        img.src = next;
+        // Même URL relayée que celle affichée, pour précharger le bon cache.
+        img.src = proxyImage(next);
       }
     });
   }, [isPaged, pageIndex, pages]);
@@ -195,6 +206,58 @@ const ChapterReader = () => {
       return i;
     });
   }, [step, previousChapter, goToChapter]);
+
+  // --- Balayage tactile ---------------------------------------------------
+  // En mode paginé sur mobile, les zones de clic latérales sont peu naturelles
+  // au doigt : un balayage horizontal change de vue, dans le sens de lecture.
+  const touchStart = useRef(null);
+
+  const onTouchStart = useCallback((event) => {
+    if (event.touches.length !== 1) {
+      touchStart.current = null;
+      return;
+    }
+    const touch = event.touches[0];
+    touchStart.current = { x: touch.clientX, y: touch.clientY };
+  }, []);
+
+  const onTouchEnd = useCallback(
+    (event) => {
+      const start = touchStart.current;
+      touchStart.current = null;
+      if (!start || !isPaged) return;
+
+      const touch = event.changedTouches[0];
+      const dx = touch.clientX - start.x;
+      const dy = touch.clientY - start.y;
+
+      // Appui simple, sans déplacement : bascule l'affichage immersif, comme
+      // dans les lecteurs de référence. Le geste dégage l'en-tête et la barre
+      // d'outils pour laisser toute la place aux planches.
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+        update({ immersif: !settings.immersif });
+        return;
+      }
+
+      // Au-delà, seul le mode paginé réagit au balayage : en mode continu, le
+      // geste horizontal ne doit pas gêner le défilement.
+      if (!isPaged) return;
+
+      // Geste franchement horizontal uniquement.
+      if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy)) return;
+
+      const swipeLeft = dx < 0;
+      if (settings.direction === "rtl") {
+        if (swipeLeft) goPrev();
+        else goNext();
+      } else if (swipeLeft) {
+        goNext();
+      } else {
+        goPrev();
+      }
+    },
+    [isPaged, settings.direction, settings.immersif, update, goNext, goPrev]
+  );
 
   // --- Clavier ------------------------------------------------------------
   useEffect(() => {
@@ -299,6 +362,12 @@ const ChapterReader = () => {
   const chapterLabel = current?.attributes?.chapter
     ? `Chapter ${current.attributes.chapter}`
     : "Chapter";
+
+  // Crédit du groupe de scanlation du chapitre en cours. Recherché sur la liste
+  // complète (et non sur sortedChapters, qui écarte les chapitres sans numéro)
+  // pour rester fiable, one-shots compris.
+  const currentChapter = mangaDetails?.chapters?.find((c) => c.id === chapterId);
+  const scanlationGroup = getScanlationGroup(currentChapter);
   const pageTitle = mangaDetails?.title
     ? `${mangaDetails.title}, ${chapterLabel}`
     : chapterLabel;
@@ -316,8 +385,8 @@ const ChapterReader = () => {
         path={`/chapter/${chapterId}`}
         description={
           mangaDetails?.title
-            ? `Read ${chapterLabel} de ${mangaDetails.title} online on MangaGo.`
-            : "Chapter reader on MangaGo."
+            ? `Read ${chapterLabel} de ${mangaDetails.title} online on ScanGo.`
+            : "Chapter reader on ScanGo."
         }
         noindex
       />
@@ -327,7 +396,9 @@ const ChapterReader = () => {
           inversait la hiérarchie. */}
       <h1 className="sr-only-focusable">{pageTitle}</h1>
 
-      {mangaDetails && !settings.immersif && <Sidebar mangaDetails={mangaDetails} />}
+      {mangaDetails && !settings.immersif && (
+        <Sidebar mangaDetails={mangaDetails} readChapters={readChapters} />
+      )}
 
       {/* Barre de progression. Le lecteur n'avait aucun repère sur des
           chapitres de 37 à 56 planches. */}
@@ -345,15 +416,21 @@ const ChapterReader = () => {
         />
       </div>
 
-      <ReaderView
-        pages={pages}
-        settings={settings}
-        isPaged={isPaged}
-        isWebtoon={isWebtoon}
-        pageIndex={pageIndex}
-        dimensions={dimensions}
-        onMeasure={onMeasure}
-      />
+      <div
+        className="w-full"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        <ReaderView
+          pages={pages}
+          settings={settings}
+          isPaged={isPaged}
+          isWebtoon={isWebtoon}
+          pageIndex={pageIndex}
+          dimensions={dimensions}
+          onMeasure={onMeasure}
+        />
+      </div>
 
       {/* Zones de clic en mode paginé, sur les bords de l'écran. */}
       {isPaged && (
@@ -433,6 +510,22 @@ const ChapterReader = () => {
         reset={reset}
         detected={detected}
       />
+
+      {/* Crédit du groupe de scanlation : MangaDex l'exige dès qu'on permet la
+          lecture d'un chapitre. */}
+      {!settings.immersif && scanlationGroup && (
+        <p className="container-page pt-6 text-center text-xs text-ink-500">
+          Scanlation by{" "}
+          <a
+            href={scanlationGroup.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-ink-300 transition-colors duration-200 hover:text-brand-400"
+          >
+            {scanlationGroup.name}
+          </a>
+        </p>
+      )}
 
       {!settings.immersif && (
         <div className="container-page flex flex-wrap items-center justify-center gap-3 py-8">

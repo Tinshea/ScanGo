@@ -2,6 +2,7 @@ import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import { SkeletonRow } from "./Skeleton";
 import { cleanText } from "../utils/date";
+import { proxyImage } from "../utils/mangadex";
 
 /**
  * Historique de lecture d'un profil.
@@ -29,7 +30,7 @@ const DisplayMangaSeen = ({ mangaSeenList }) => {
                 <img
                   referrerPolicy="no-referrer"
                   loading="lazy"
-                  src={manga.image}
+                  src={proxyImage(manga.image)}
                   alt={cleanText(manga.title)}
                   className="h-full w-full object-cover"
                 />
@@ -42,9 +43,8 @@ const DisplayMangaSeen = ({ mangaSeenList }) => {
                     {cleanText(manga.title)}
                   </h3>
                   <p className="mt-1 text-2xs text-ink-400">
-                    {manga.chapters?.length || 0} chapitre
-                    {manga.chapters?.length > 1 ? "s" : ""} lu
-                    {manga.chapters?.length > 1 ? "s" : ""}
+                    {manga.chapters?.length || 0} chapter
+                    {manga.chapters?.length > 1 ? "s" : ""} read
                   </p>
                 </div>
               </div>

@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -26,6 +27,12 @@ const (
 	// maxChapterPages borne la pagination. Sans cette limite, une réponse
 	// amont incohérente (données vides mais total non nul) boucle à l'infini.
 	maxChapterPages = 50
+
+	// mangadexConcurrency borne le nombre d'appels MangaDex simultanés déclenchés
+	// par une seule requête entrante. MangaDex limite à environ 5 requêtes/s par
+	// IP : au-delà, les appels reviennent en 429 (ErrRateLimited), ce qui serait
+	// plus lent que la version séquentielle.
+	mangadexConcurrency = 5
 
 	// maxResultWindow est la profondeur maximale acceptée par MangaDex :
 	// « Result window is too large, from + size must be <= 10000 ».
@@ -282,36 +289,82 @@ func GetManga(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// fetchAllChapters parcourt le flux de chapitres en anglais, page par page.
+// fetchAllChapters récupère le flux complet des chapitres en anglais.
+//
+// La première page fournit le total, donc le nombre de pages restantes : ces
+// pages sont ensuite récupérées en parallèle, avec une borne de concurrence
+// pour rester sous la limite de débit de MangaDex (~5 requêtes/s par IP). Un
+// titre long (plus de mille chapitres) n'impose ainsi plus une dizaine
+// d'allers-retours séquentiels avant l'affichage de la fiche.
 func fetchAllChapters(ctx context.Context, mangaID string) ([]models.Chapter, int, error) {
-	var all []models.Chapter
-	total := 0
-
-	for page := 0; page < maxChapterPages; page++ {
-		params := url.Values{}
-		params.Set("translatedLanguage[]", "en")
-		params.Set("limit", strconv.Itoa(chapterPageSize))
-		params.Set("offset", strconv.Itoa(page*chapterPageSize))
-
-		var res models.APIResponseChapter
-		if err := mangadex.GetJSON(ctx, "/manga/"+mangaID+"/feed", params, &res); err != nil {
-			// Une erreur amont est remontée telle quelle : renvoyer une liste
-			// tronquée en prétendant qu'elle est complète serait pire.
-			return nil, 0, err
-		}
-
-		total = res.Total
-		all = append(all, res.Data...)
-
-		// Sortie si la page est vide (protection contre un total incohérent)
-		// ou si tout a été collecté.
-		if len(res.Data) == 0 || len(all) >= total {
-			break
-		}
+	first, total, err := fetchChapterPage(ctx, mangaID, 0)
+	if err != nil {
+		// Une erreur amont est remontée telle quelle : renvoyer une liste
+		// tronquée en prétendant qu'elle est complète serait pire.
+		return nil, 0, err
 	}
 
+	all := make([]models.Chapter, 0, total)
+	all = append(all, first...)
+
+	// Rien de plus à charger : page unique, vide (total incohérent), ou déjà
+	// complète.
+	if len(first) == 0 || len(all) >= total {
+		sortChapters(all)
+		return all, total, nil
+	}
+
+	pages := (total + chapterPageSize - 1) / chapterPageSize
+	if pages > maxChapterPages {
+		pages = maxChapterPages
+	}
+
+	var (
+		mu   sync.Mutex
+		rest []models.Chapter
+	)
+	g, gctx := errgroup.WithContext(ctx)
+	g.SetLimit(mangadexConcurrency)
+	for page := 1; page < pages; page++ {
+		offset := page * chapterPageSize
+		g.Go(func() error {
+			data, _, err := fetchChapterPage(gctx, mangaID, offset)
+			if err != nil {
+				return err
+			}
+			mu.Lock()
+			rest = append(rest, data...)
+			mu.Unlock()
+			return nil
+		})
+	}
+	if err := g.Wait(); err != nil {
+		return nil, 0, err
+	}
+
+	all = append(all, rest...)
+	// L'ordre de collecte des pages parallèles est indifférent : le tri final
+	// rétablit l'ordre chronologique.
 	sortChapters(all)
 	return all, total, nil
+}
+
+// fetchChapterPage récupère une page du flux de chapitres et renvoie aussi le
+// total annoncé par MangaDex.
+func fetchChapterPage(ctx context.Context, mangaID string, offset int) ([]models.Chapter, int, error) {
+	params := url.Values{}
+	params.Set("translatedLanguage[]", "en")
+	params.Set("limit", strconv.Itoa(chapterPageSize))
+	params.Set("offset", strconv.Itoa(offset))
+	// Le groupe de scanlation est inclus pour pouvoir le créditer : MangaDex
+	// l'exige dès lors qu'on permet la lecture des chapitres.
+	params.Set("includes[]", "scanlation_group")
+
+	var res models.APIResponseChapter
+	if err := mangadex.GetJSON(ctx, "/manga/"+mangaID+"/feed", params, &res); err != nil {
+		return nil, 0, err
+	}
+	return res.Data, res.Total, nil
 }
 
 // sortChapters trie du plus récent au plus ancien.
@@ -438,22 +491,29 @@ func HomeManga(w http.ResponseWriter, r *http.Request) {
 	newest := sectionParams(SectionNewest, limit, 0)
 	popular := sectionParams(SectionPopular, limit, 0)
 
-	browseRes, err := fetchMangaList(ctx, browse)
-	if err != nil {
-		log.Printf("HomeManga (exploration): %v", err)
+	// Les trois sections sont indépendantes : les récupérer en série faisait
+	// payer à la page d'accueil trois allers-retours MangaDex successifs. On
+	// les lance donc en parallèle ; la première erreur annule les autres.
+	var browseRes, newestRes, popularRes models.ApiResponse
+	g, gctx := errgroup.WithContext(ctx)
+	g.Go(func() error {
+		var err error
+		browseRes, err = fetchMangaList(gctx, browse)
+		return err
+	})
+	g.Go(func() error {
+		var err error
+		newestRes, err = fetchMangaList(gctx, newest)
+		return err
+	})
+	g.Go(func() error {
+		var err error
+		popularRes, err = fetchMangaList(gctx, popular)
+		return err
+	})
+	if err := g.Wait(); err != nil {
+		log.Printf("HomeManga: %v", err)
 		http.Error(w, "Could not load the catalogue", mangadex.HTTPStatus(err))
-		return
-	}
-	newestRes, err := fetchMangaList(ctx, newest)
-	if err != nil {
-		log.Printf("HomeManga (nouveautés): %v", err)
-		http.Error(w, "Could not load the latest titles", mangadex.HTTPStatus(err))
-		return
-	}
-	popularRes, err := fetchMangaList(ctx, popular)
-	if err != nil {
-		log.Printf("HomeManga (populaires): %v", err)
-		http.Error(w, "Could not load the popular titles", mangadex.HTTPStatus(err))
 		return
 	}
 
@@ -470,11 +530,28 @@ func HomeManga(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// fetchMangaList applique le filtre de contenu puis interroge /manga.
+// fetchMangaList applique le filtre de contenu puis interroge /manga, en
+// passant par un cache mémoire à durée de vie courte.
+//
+// La clé est l'encodage trié des paramètres filtrés : deux appels identiques
+// (les sections « nouveautés » et « populaires » sont invariantes) partagent
+// donc la même entrée, tandis qu'une recherche distincte crée simplement la
+// sienne.
 func fetchMangaList(ctx context.Context, params url.Values) (models.ApiResponse, error) {
+	filtered := mangadex.ApplyContentFilter(params)
+	key := filtered.Encode()
+
+	if res, ok := cachedList(key); ok {
+		return res, nil
+	}
+
 	var res models.ApiResponse
-	err := mangadex.GetJSON(ctx, "/manga", mangadex.ApplyContentFilter(params), &res)
-	return res, err
+	if err := mangadex.GetJSON(ctx, "/manga", filtered, &res); err != nil {
+		return models.ApiResponse{}, err
+	}
+
+	storeList(key, res)
+	return res, nil
 }
 
 // GetTags renvoie la liste des genres disponibles, pour alimenter le filtre
@@ -574,44 +651,82 @@ func GetUserMangaDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Les titres suivis avant la mise en place du filtre sont écartés ici.
-	followed := make([]models.Mangareturn, 0, len(user.FollowedMangas))
-	for _, mangaID := range user.FollowedMangas {
-		manga, err := fetchMangaByID(ctx, mangaID)
-		if err != nil {
-			log.Printf("GetUserMangaDetails: manga %s ignoré : %v", mangaID, err)
-			continue
-		}
-		if !config.IsRatingAllowed(manga.Attributes.ContentRating) {
-			continue
-		}
-		followed = append(followed, extractMangaData(manga))
+	// Les titres suivis et l'historique déclenchaient auparavant un appel
+	// MangaDex par élément, en série : un profil actif enchaînait des dizaines
+	// d'allers-retours. Les deux collections sont désormais récupérées en
+	// parallèle, avec une borne de concurrence commune. Les résultats sont
+	// rangés dans des emplacements indexés pour préserver l'ordre d'origine
+	// malgré l'exécution concurrente ; les entrées écartées restent nulles.
+	g, gctx := errgroup.WithContext(ctx)
+	g.SetLimit(mangadexConcurrency)
+
+	followedSlots := make([]*models.Mangareturn, len(user.FollowedMangas))
+	for i, mangaID := range user.FollowedMangas {
+		g.Go(func() error {
+			manga, err := fetchMangaByID(gctx, mangaID)
+			if err != nil {
+				// Un titre inaccessible est ignoré, pas propagé : il ne doit pas
+				// faire échouer tout le profil.
+				log.Printf("GetUserMangaDetails: manga %s ignoré : %v", mangaID, err)
+				return nil
+			}
+			if !config.IsRatingAllowed(manga.Attributes.ContentRating) {
+				return nil
+			}
+			m := extractMangaData(manga)
+			followedSlots[i] = &m
+			return nil
+		})
 	}
 
-	seen := make([]models.MangaReturnWithChapters, 0, len(user.Mangas))
-	for _, entry := range user.Mangas {
-		manga, err := fetchMangaByID(ctx, entry.MangaId)
-		if err != nil {
-			log.Printf("GetUserMangaDetails: manga %s ignoré : %v", entry.MangaId, err)
-			continue
-		}
-		if !config.IsRatingAllowed(manga.Attributes.ContentRating) {
-			continue
-		}
-
-		item := models.MangaReturnWithChapters{
-			Mangareturn: extractMangaData(manga),
-			Chapters:    make([]models.Chapter, 0, len(entry.Chapters)),
-		}
-		for _, chapterID := range entry.Chapters {
-			chapter, err := fetchChapterDetails(ctx, chapterID)
+	seenSlots := make([]*models.MangaReturnWithChapters, len(user.Mangas))
+	for i, entry := range user.Mangas {
+		g.Go(func() error {
+			manga, err := fetchMangaByID(gctx, entry.MangaId)
 			if err != nil {
-				log.Printf("GetUserMangaDetails: chapitre %s ignoré : %v", chapterID, err)
-				continue
+				log.Printf("GetUserMangaDetails: manga %s ignoré : %v", entry.MangaId, err)
+				return nil
 			}
-			item.Chapters = append(item.Chapters, chapter)
+			if !config.IsRatingAllowed(manga.Attributes.ContentRating) {
+				return nil
+			}
+
+			item := models.MangaReturnWithChapters{
+				Mangareturn: extractMangaData(manga),
+				Chapters:    make([]models.Chapter, 0, len(entry.Chapters)),
+			}
+			// Les chapitres vus d'un même titre restent séquentiels : la borne
+			// de concurrence porte sur l'ensemble des titres, ce qui suffit à
+			// tenir la limite de débit sans imbriquer les sémaphores.
+			for _, chapterID := range entry.Chapters {
+				chapter, err := fetchChapterDetails(gctx, chapterID)
+				if err != nil {
+					log.Printf("GetUserMangaDetails: chapitre %s ignoré : %v", chapterID, err)
+					continue
+				}
+				item.Chapters = append(item.Chapters, chapter)
+			}
+			seenSlots[i] = &item
+			return nil
+		})
+	}
+
+	// Les erreurs individuelles sont déjà consignées et neutralisées ci-dessus,
+	// donc Wait ne renvoie rien : l'appel sert uniquement de barrière.
+	_ = g.Wait()
+
+	followed := make([]models.Mangareturn, 0, len(followedSlots))
+	for _, m := range followedSlots {
+		if m != nil {
+			followed = append(followed, *m)
 		}
-		seen = append(seen, item)
+	}
+
+	seen := make([]models.MangaReturnWithChapters, 0, len(seenSlots))
+	for _, s := range seenSlots {
+		if s != nil {
+			seen = append(seen, *s)
+		}
 	}
 
 	writeJSON(w, map[string]interface{}{
@@ -620,12 +735,16 @@ func GetUserMangaDetails(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// fetchChapterDetails récupère le détail d'un chapitre.
+// fetchChapterDetails récupère le détail d'un chapitre, groupe de scanlation
+// inclus pour permettre son crédit.
 func fetchChapterDetails(ctx context.Context, chapterID string) (models.Chapter, error) {
+	params := url.Values{}
+	params.Set("includes[]", "scanlation_group")
+
 	var res struct {
 		Data models.Chapter `json:"data"`
 	}
-	if err := mangadex.GetJSON(ctx, "/chapter/"+chapterID, nil, &res); err != nil {
+	if err := mangadex.GetJSON(ctx, "/chapter/"+chapterID, params, &res); err != nil {
 		return models.Chapter{}, err
 	}
 	return res.Data, nil

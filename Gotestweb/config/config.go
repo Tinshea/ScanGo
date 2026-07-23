@@ -51,7 +51,7 @@ var defaultAllowedRatings = []string{"safe", "suggestive"}
 var defaultAllowedOrigins = []string{
 	"http://localhost:5173",
 	"http://localhost:3000",
-	"https://scan-go-five.vercel.app",
+	"https://scango.malekbouzarkouna.com",
 }
 
 // Load lit l'environnement et interrompt le processus si un réglage

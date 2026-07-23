@@ -41,7 +41,7 @@ const Home = () => {
     <>
       <Seo
         path="/"
-        description="Read manga online on MangaGo. Full catalogue, latest releases, genre search, immersive reader and reading history."
+        description="Read manga online on ScanGo. Full catalogue, latest releases, genre search, immersive reader and reading history."
       />
 
       {/* Un seul h1 par page, placé en tête du document. La page portait
@@ -50,7 +50,7 @@ const Home = () => {
           carrousel, dont le titre change et ne peut pas servir de titre de
           page. */}
       <h1 className="sr-only-focusable">
-        MangaGo, read manga online
+        ScanGo, read manga online
       </h1>
 
       {error && (

@@ -73,7 +73,7 @@ const ProfilePage = () => {
       <Seo
         title={`Profile of ${profile.username}`}
         path={`/User/${id}`}
-        description={`Profile of ${profile.username} on MangaGo.`}
+        description={`Profile of ${profile.username} on ScanGo.`}
         noindex
       />
 

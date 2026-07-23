@@ -8,6 +8,7 @@ import PopupComponent from "./PopupComponent";
 import Seo from "./Seo";
 import api, { messageFromError } from "../api";
 import { cleanText } from "../utils/date";
+import { proxyImage } from "../utils/mangadex";
 
 // Libellés de statut. L'interface affichait la valeur brute de l'API, en
 // anglais et en minuscules, au milieu d'une interface française.
@@ -92,6 +93,28 @@ const MangaDetails = () => {
   const status = STATUS_LABELS[manga.status] || manga.status;
   const firstChapter = manga.chapters?.[manga.chapters.length - 1];
 
+  // Historique de lecture de ce titre. Le backend renvoie les chapitres du plus
+  // récent au plus ancien : l'ordre de lecture est donc l'ordre inverse.
+  const readEntry = user?.mangas?.find((entry) => entry.mangaId === id);
+  const readChapters = new Set(readEntry?.chapters || []);
+  const hasStarted = readChapters.size > 0;
+  const readingOrder = manga.chapters ? [...manga.chapters].reverse() : [];
+  // Reprise = premier chapitre non encore lu dans l'ordre de lecture.
+  const resumeChapter = readingOrder.find((chapter) => !readChapters.has(chapter.id)) || null;
+
+  // Cible et libellé de l'appel à l'action principal.
+  const ctaChapter = resumeChapter || firstChapter;
+  let ctaLabel = "Start reading";
+  if (hasStarted) {
+    if (resumeChapter) {
+      const number = resumeChapter.attributes?.chapter;
+      ctaLabel = number != null ? `Continue · Ch. ${number}` : "Continue reading";
+    } else {
+      // Tout est lu : proposer une relecture depuis le début.
+      ctaLabel = "Read again";
+    }
+  }
+
   return (
     <>
       <Seo
@@ -101,7 +124,7 @@ const MangaDetails = () => {
         type="book"
         description={
           description ||
-          `Read ${title} online on MangaGo. ${manga.chapters?.length || 0} chapters available.`
+          `Read ${title} online on ScanGo. ${manga.chapters?.length || 0} chapters available.`
         }
         jsonLd={{
           "@context": "https://schema.org",
@@ -127,7 +150,7 @@ const MangaDetails = () => {
         <div className="absolute inset-0 h-[40vh] overflow-hidden">
           <img
             referrerPolicy="no-referrer"
-            src={manga.image}
+            src={proxyImage(manga.image)}
             alt=""
             aria-hidden="true"
             className="h-full w-full scale-110 object-cover object-[center_25%] blur-2xl saturate-150"
@@ -142,7 +165,7 @@ const MangaDetails = () => {
             <div className="mx-auto w-44 shrink-0 md:mx-0 md:w-full">
               <img
                 referrerPolicy="no-referrer"
-                src={manga.image}
+                src={proxyImage(manga.image)}
                 alt={`Cover of ${title}`}
                 className="w-full rounded-lg shadow-[0_24px_60px_-20px_rgba(0,0,0,0.9)] ring-1 ring-white/10"
               />
@@ -157,7 +180,7 @@ const MangaDetails = () => {
                   {status}
                   {manga.year > 0 && ` · ${manga.year}`}
                   {manga.chapters?.length > 0 &&
-                    ` · ${manga.chapters.length} chapitre${manga.chapters.length > 1 ? "s" : ""}`}
+                    ` · ${manga.chapters.length} chapter${manga.chapters.length > 1 ? "s" : ""}`}
                 </p>
               </div>
 
@@ -179,12 +202,12 @@ const MangaDetails = () => {
               <div className="flex flex-wrap gap-3">
                 {firstChapter ? (
                   <Link
-                    to={`/chapter/${firstChapter.id}`}
+                    to={`/chapter/${ctaChapter.id}`}
                     state={{ mangaDetails: manga }}
                     className="inline-flex items-center gap-2 rounded-full bg-brand-500 px-6 py-3 text-sm font-bold whitespace-nowrap text-white transition-colors duration-300 hover:bg-brand-600"
                   >
                     <BookOpen size={18} strokeWidth={2} />
-                    Start reading
+                    {ctaLabel}
                   </Link>
                 ) : (
                   <span className="inline-flex items-center rounded-full bg-ink-850 px-6 py-3 text-sm font-semibold text-ink-400">
@@ -217,7 +240,7 @@ const MangaDetails = () => {
 
       <section className="container-page py-12 md:py-16">
         <h2 className="mb-5 text-2xl text-ink-050">Chapters</h2>
-        <ChapterList mangaDetails={manga} />
+        <ChapterList mangaDetails={manga} readChapters={readChapters} />
       </section>
     </>
   );

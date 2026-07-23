@@ -17,6 +17,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"Gotestweb/config"
@@ -29,7 +30,7 @@ const BaseURL = "https://api.mangadex.org"
 const UploadsURL = "https://uploads.mangadex.org"
 
 // MangaDex exige un User-Agent identifiable et bloque les clients anonymes.
-const userAgent = "ScanGo/1.0 (+https://scan-go-five.vercel.app)"
+const userAgent = "ScanGo/1.0 (+https://scango.malekbouzarkouna.com)"
 
 // maxResponseBytes plafonne la taille d'une réponse pour éviter qu'un
 // contenu inattendu ne fasse gonfler la mémoire du serveur.
@@ -39,7 +40,22 @@ const maxResponseBytes = 16 << 20 // 16 Mio
 // bloquée indéfiniment par requête entrante.
 const requestTimeout = 15 * time.Second
 
-var client = &http.Client{Timeout: requestTimeout}
+// Tous les appels visent le même hôte (api.mangadex.org). Le Transport par
+// défaut plafonne à MaxIdleConnsPerHost = 2 : dès qu'on parallélise, la
+// plupart des requêtes rouvrent une connexion TCP+TLS (~100-300 ms perdus).
+// On élargit donc le pool de connexions réutilisables vers cet hôte unique.
+var client = &http.Client{
+	Timeout: requestTimeout,
+	Transport: &http.Transport{
+		Proxy:                 http.ProxyFromEnvironment,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          64,
+		MaxIdleConnsPerHost:   32,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	},
+}
 
 // Erreurs distinguées pour permettre aux handlers de choisir le bon statut.
 var (
@@ -99,6 +115,47 @@ func GetRaw(ctx context.Context, path string, params url.Values) ([]byte, error)
 		return nil, fmt.Errorf("lecture de la réponse de %s : %w", path, err)
 	}
 	return body, nil
+}
+
+// --- Proxy d'images ---------------------------------------------------------
+//
+// La politique d'utilisation de l'API impose de relayer les requêtes d'images
+// des utilisateurs plutôt que de les laisser interroger directement les hôtes
+// de MangaDex. Le relais ne doit accepter que ces hôtes, pour ne pas se
+// transformer en proxy ouvert (risque de SSRF).
+
+// IsImageHostAllowed n'autorise que les hôtes d'images de MangaDex : le CDN des
+// couvertures et les nœuds du réseau MangaDex@Home.
+func IsImageHostAllowed(host string) bool {
+	host = strings.ToLower(host)
+	return host == "uploads.mangadex.org" || strings.HasSuffix(host, ".mangadex.network")
+}
+
+// imageClient réutilise le transport accordé mais valide chaque redirection :
+// une redirection vers un hôte non autorisé (interne, par exemple) est refusée.
+var imageClient = &http.Client{
+	Timeout:   requestTimeout,
+	Transport: client.Transport,
+	CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		if len(via) >= 5 {
+			return errors.New("trop de redirections")
+		}
+		if !IsImageHostAllowed(req.URL.Hostname()) {
+			return fmt.Errorf("redirection non autorisée vers %s", req.URL.Host)
+		}
+		return nil
+	},
+}
+
+// GetImage récupère une image chez MangaDex. L'appelant doit fermer le corps
+// de la réponse et l'appliquer avec une limite de taille lors de la copie.
+func GetImage(ctx context.Context, rawURL string) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("construction de la requête image : %w", err)
+	}
+	req.Header.Set("User-Agent", userAgent)
+	return imageClient.Do(req)
 }
 
 // ApplyContentFilter ajoute les restrictions de contenu aux paramètres.
